@@ -1,18 +1,16 @@
 package webcrawler;
 
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.net.URL;
 
 public class Main {
-    public static void main(String[] args) throws SocketException, UnknownHostException {
-        // código a ser executado quando o programa é iniciado
-        String[] urls = {
-            "http://www.example.com",
-            "http://www.example.net",
-            "http://www.example.org"
-          };
-        Downloader Downloader = new Downloader();
-       
-        Downloader.download(urls);
+    public static void main(String[] args) {
+        try {
+            URL startingUrl = new URL("https://en.wikipedia.org/");
+            int numThreads = 400;
+            Downloader downloader = new Downloader(startingUrl, numThreads);
+            downloader.start();
+        } catch (Exception e) {
+            System.out.println("Error starting downloader: " + e.getMessage());
+        }
     }
 }
