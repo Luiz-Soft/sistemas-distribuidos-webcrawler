@@ -1,3 +1,7 @@
 {
-	"java.project.referencedLibraries": ["lib/**/*.jar", "jsoup-1.15.4.jar"]
+	"java.project.referencedLibraries": [
+		"lib/**/*.jar",
+		"jsoup-1.15.4.jar",
+		"googol/webcrawler/jsoup-1.15.4.jar"
+	]
 }

@@ -24,15 +24,16 @@ public class Downloader {
   private final MulticastSocket socket;
   private final InetAddress group;
   private final int PORT;
-
-  public Downloader(URL startingUrl, int numThreads, int port) throws Exception {
+  private final String HOST;;
+  public Downloader(URL startingUrl, int numThreads, int port, String host) throws Exception {
     urlsToVisit = new ConcurrentLinkedQueue<>();
     urlsVisited = new HashSet<>();
     urlsToVisit.add(startingUrl);
     executorService = Executors.newFixedThreadPool(numThreads);
     this.numThreads = numThreads;
+    this.HOST= host;
     socket = new MulticastSocket();
-    group = InetAddress.getByName("224.3.2.1");
+    group = InetAddress.getByName(HOST);
     this.PORT = port;
   }
 

@@ -5,14 +5,15 @@ import java.net.InetAddress;
 import java.io.IOException;
 
 public class MulticastServer extends Thread {
-    private String MULTICAST_ADDRESS = "224.3.2.1";
+    private String MULTICAST_ADDRESS;
     private int PORT;
     private long SLEEP_TIME = 5000;
 
 
-    public MulticastServer(int port) {
+    public MulticastServer(int port, String multicastAddress) {
         super("Server " + (long) (Math.random() * 1000));
         this.PORT = port;
+        this.MULTICAST_ADDRESS = multicastAddress;
     }
 
     public void run() {
