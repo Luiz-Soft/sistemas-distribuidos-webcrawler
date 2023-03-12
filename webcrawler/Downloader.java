@@ -1,6 +1,9 @@
 package webcrawler;
 
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.MulticastSocket;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,13 +21,19 @@ public class Downloader {
   private final Set<URL> urlsVisited;
   private final ExecutorService executorService;
   private final int numThreads;
+  private final MulticastSocket socket;
+  private final InetAddress group;
+  private final int PORT;
 
-  public Downloader(URL startingUrl, int numThreads) {
+  public Downloader(URL startingUrl, int numThreads, int port) throws Exception {
     urlsToVisit = new ConcurrentLinkedQueue<>();
     urlsVisited = new HashSet<>();
     urlsToVisit.add(startingUrl);
     executorService = Executors.newFixedThreadPool(numThreads);
     this.numThreads = numThreads;
+    socket = new MulticastSocket();
+    group = InetAddress.getByName("224.3.2.1");
+    this.PORT = port;
   }
 
   public void start() {
@@ -37,6 +46,18 @@ public class Downloader {
     } catch (InterruptedException e) {
       System.out.println("Downloader was interrupted");
       Thread.currentThread().interrupt();
+    } finally {
+      socket.close();
+    }
+  }
+
+  private void sendIndex(String content) {
+    try {
+      byte[] buffer = content.getBytes();
+      DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
+      socket.send(packet);
+    } catch (Exception e) {
+      System.out.println("Error sending index: " + e.getMessage());
     }
   }
 
@@ -63,7 +84,8 @@ public class Downloader {
         }
         System.out.println(url + " downloaded.");
         // Update index with downloaded content
-        // index.update(doc);
+        String indexContent = doc.body().text();
+        sendIndex(indexContent);
       } catch (Exception e) {
         System.out.println("Error processing URL " + url + ": " + e.getMessage());
       }
