@@ -57,6 +57,7 @@ public class Downloader {
       byte[] buffer = content.getBytes();
       DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
       socket.send(packet);
+      System.out.println("Sent to index! ");
     } catch (Exception e) {
       System.out.println("Error sending index: " + e.getMessage());
     }
