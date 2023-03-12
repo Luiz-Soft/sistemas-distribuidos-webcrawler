@@ -6,7 +6,10 @@ import webcrawler.Downloader;
 public class Main {
     public static void main(String[] args) {
         try {
+            //downloader parameters
             URL startingUrl = new URL("https://en.wikipedia.org/");
+           
+            //client and multicast server parameters
             int numThreads = 100;
             int port = 4321;
             String hostAddress = "224.3.2.1";
