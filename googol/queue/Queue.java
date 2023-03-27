@@ -41,12 +41,8 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 	public static void main(String[] args) throws RemoteException {
 		QueueInterface qi = new Queue();
 		
-		try {
-			LocateRegistry.createRegistry(1099).rebind("queue_mod", qi);
-		} catch (RemoteException e) {
-			LocateRegistry.getRegistry(1099).rebind("queue_mod", qi);
-		}
-
+		LocateRegistry.createRegistry(1099).rebind("queue_mod", qi);
+		
 		System.out.println("Queue Module Ready");
 	}
 }

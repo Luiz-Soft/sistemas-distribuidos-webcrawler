@@ -12,24 +12,28 @@ import queue.QueueInterface;
 public class SearchModule extends UnicastRemoteObject implements SearchModuleInterface {
 
 	private static final long serialVersionUID = 1L;
+	private static final int num_of_tries = 5;
+	
 	private QueueInterface queue;
 
 	protected SearchModule() throws RemoteException {
 		super();
-		queue = get_queue_conection();
+		queue = null;
 	}
 
 	private QueueInterface get_queue_conection(){
-		
+		System.out.println("Getting Queue Connection ...");
+
 		QueueInterface qi = null;
 		
-		while (qi == null){
+		for (int i = 0; i < num_of_tries; i++) {
 			try {
+				System.out.println(Naming.list("rmi://localhost/"));
 				qi = (QueueInterface) Naming.lookup("rmi://localhost/queue_mod");
-				return qi;
+				break;
 			
 			} catch (MalformedURLException | RemoteException | NotBoundException e) {
-				System.out.println("Retrying Conection ...");
+				System.out.println("\tRetrying Conection ...");
 			}
 			
 			try {
@@ -39,6 +43,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 				break;	
 			}
 		}
+
+		if (qi == null)
+			System.out.println("Conection failed");
+		else System.out.println("Queue Connection Succesfull.");
 
 		return qi;
 	}
@@ -51,6 +59,21 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 
 	@Override
 	public boolean querie_url(String url) {
+
+		// first try
+		try {
+			queue.append_url(url);
+			System.out.println(url + " recived");
+			return true;
+
+		} catch (RemoteException | NullPointerException e) {
+			queue = get_queue_conection();
+		}
+
+		if (queue == null)
+			return false;
+
+		// second try
 		try {
 			queue.append_url(url);
 		} catch (RemoteException e) {
@@ -66,11 +89,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	public static void main(String[] args) throws RemoteException {
 		SearchModuleInterface smi = new SearchModule();
 		
-		try {
-			LocateRegistry.getRegistry(1099).rebind("search_mod", smi);
-		} catch (RemoteException e) {
-			LocateRegistry.createRegistry(1099).rebind("search_mod", smi);
-		}
+		LocateRegistry.createRegistry(1098).rebind("search_mod", smi);
 
 		System.out.println("Search Module Ready");
 	}
