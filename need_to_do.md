@@ -5,6 +5,6 @@
 
 - [ ] Make urls distribution to downloaders in **Queue** 
 
-- [ ] Make login feature in **Search Module**
+- [x] Make login feature in **Search Module**
 
 - [ ] Make **Queue** recovery

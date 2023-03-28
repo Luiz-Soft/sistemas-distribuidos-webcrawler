@@ -15,9 +15,11 @@ public class Cliente {
 	private static final int num_of_tries = 5;
 
 	private SearchModuleInterface smi;
+	private boolean loged_in;
 
 
 	public Cliente() {
+		loged_in = false;
 		System.out.println("Getting connection ...");
 		
 		smi = get_server_connection();
@@ -56,18 +58,76 @@ public class Cliente {
 		return smi;
 	}
 
+	private void handle_add(String url) throws RemoteException{
+		boolean resp = smi.querie_url(url);
+		if (!resp) System.err.println("Unable to process comand.");
+	}
+
+	private void handle_search() throws RemoteException{
+		smi.search_results();
+	}
+
+	private void handle_register(String username, String password) throws RemoteException{
+		boolean resp = smi.register(username, password);
+
+		if (!resp)
+			System.out.println("User already exists");
+		else{
+			System.out.println("Register successful");
+			loged_in = true;
+			System.out.println("Logged in");
+		}
+	}
+
+	private void handle_login(String username, String password) throws RemoteException{
+		int resp = smi.login(username, password);
+		
+		if (resp == 1){
+			System.out.println("Logged in");
+			loged_in = true;
+		}else if (resp == 0){
+			System.out.println("User not found");
+		}else if (resp == -1){
+			System.out.println("Wrong password");
+		}
+	}
+
+	private void handle_probe(String url) throws RemoteException{
+		if (!loged_in){
+			System.out.println("Need to login");
+			return;
+		}
+		smi.probe_url(url);
+	}
+
+	
 	private void handle_order(String[] params){
-		boolean resp;
 
 		try {
-			if (params[0].equals("add")){
-				resp = smi.querie_url(params[1]);
-				if (!resp) System.err.println("Unable to process comand.");
-
-			}else if (params[0].equals("search"))
-				smi.search_results();
-			
+			switch (params[0]) {
+				case "add":
+					handle_add(params[1]);
+					break;
+				case "search":
+					handle_search();
+					break;
+				case "register":
+					handle_register(params[1], params[2]);
+					break;
+				case "login":
+					handle_login(params[1], params[2]);
+					break;
+				case "probe":
+					handle_probe(params[1]);
+					break;
+				case "logout":
+					loged_in = false;
+					System.out.println("Loged out");
+				default:
+					break;
+			}			
 			return;
+			
 		} catch (RemoteException | NullPointerException e) {
 			smi = get_server_connection();
 			if (smi == null) System.err.println("Unable to reach search module.");
@@ -85,18 +145,6 @@ public class Cliente {
 			
 			if (data.equals("quit"))
 				break;
-			
-			if (data.equals("list")){
-				try {
-					for (String iterable_element : Naming.list("rmi://localhost/")) {
-						System.out.println(iterable_element);
-					}
-				} catch (RemoteException | MalformedURLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				continue;
-			}
 			
 			String[] params = data.split(" ");
 			

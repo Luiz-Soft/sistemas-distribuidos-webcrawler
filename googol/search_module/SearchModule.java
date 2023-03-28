@@ -6,6 +6,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.concurrent.ConcurrentHashMap;
 
 import queue.QueueInterface;
 
@@ -15,10 +16,12 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	private static final int num_of_tries = 5;
 	
 	private QueueInterface queue;
+	private ConcurrentHashMap<String, String> users;
 
 	protected SearchModule() throws RemoteException {
 		super();
 		queue = null;
+		users = new ConcurrentHashMap<>();
 	}
 
 	private QueueInterface get_queue_conection(){
@@ -85,6 +88,35 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		return true;
 	}
 
+	@Override
+	public boolean register(String username, String password) {
+		String past_key = users.put(username, password);
+
+		if (past_key != null)
+			return false;
+		return true;
+	}
+
+	@Override
+	public int login(String username, String password) throws RemoteException {
+		String password_to_check = users.get(username);
+
+		if (password_to_check == null){
+			return 0;
+		}else if (!password.equals(password_to_check)){
+			return -1;
+		}
+
+		return 1;
+	}
+
+	@Override
+	public String[] probe_url(String url) throws RemoteException {
+		String[] ola = {};
+		
+		return ola;
+	}
+
 
 	public static void main(String[] args) throws RemoteException {
 		SearchModuleInterface smi = new SearchModule();
@@ -93,5 +125,5 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 
 		System.out.println("Search Module Ready");
 	}
-	
+
 }
