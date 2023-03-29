@@ -83,6 +83,10 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 		}
 	}
 
+	@Override
+	public void ping() throws RemoteException {
+	}
+
 	public static void main(String[] args) throws RemoteException {
 		QueueInterface qi = new Queue();
 		

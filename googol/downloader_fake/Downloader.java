@@ -11,12 +11,14 @@ import queue.QueueInterface;
 public class Downloader extends UnicastRemoteObject implements DownloaderInterface {
 
 	private QueueInterface queue;
+	private int keepAliveTimer = 10000;
 
 
 	protected Downloader() throws RemoteException {
 		super();
 		queue = get_queue_conection();
 		queue.register_downloader(this);
+		keepAlive();
 	}
 
 	private QueueInterface get_queue_conection(){
@@ -26,7 +28,7 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 		while (qi == null){
 			try {
 				qi = (QueueInterface) Naming.lookup("rmi://localhost/queue_mod");
-				return qi;
+				break;
 			
 			} catch (MalformedURLException | RemoteException | NotBoundException e) {
 				System.out.println("Retrying Conection ...");
@@ -39,7 +41,7 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 				break;	
 			}
 		}
-
+		
 		return qi;
 	}
 
@@ -50,12 +52,40 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 		try {
 			Thread.sleep(5000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		System.out.println(url + " processed");
 		return ola;
+	}
+
+	public void keepAlive() {
+		Runnable keepAliveRunnable = () -> {
+			while (true) {
+				try {
+					Thread.sleep(keepAliveTimer);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+
+				try {
+					queue.ping();
+					continue;
+				} catch (RemoteException e) {
+					queue = get_queue_conection();
+				}
+
+				try {
+					queue.register_downloader(this);
+				} catch (RemoteException e) {
+				}
+
+			}
+		};
+	
+		Thread assignDownloadersThread = new Thread(keepAliveRunnable);
+		assignDownloadersThread.start();
 	}
 
 	public static void main(String[] args) throws RemoteException {
