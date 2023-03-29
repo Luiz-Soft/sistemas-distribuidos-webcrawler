@@ -15,32 +15,31 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import java.nio.charset.StandardCharsets;
 
 public class Downloader {
-  private final ConcurrentLinkedQueue<URL> urlsToVisit;
-  private final Set<URL> urlsVisited;
   private final ExecutorService executorService;
   private final int numThreads;
   private final MulticastSocket socket;
   private final InetAddress group;
   private final int PORT;
   private final String HOST;;
+  private static final String DELIMITER = "|||";
+
   public Downloader(URL startingUrl, int numThreads, int port, String host) throws Exception {
-    urlsToVisit = new ConcurrentLinkedQueue<>();
-    urlsVisited = new HashSet<>();
-    urlsToVisit.add(startingUrl);
     executorService = Executors.newFixedThreadPool(numThreads);
     this.numThreads = numThreads;
-    this.HOST= host;
+    this.HOST = host;
     socket = new MulticastSocket();
     group = InetAddress.getByName(HOST);
     this.PORT = port;
+
+    for (int i = 0; i < numThreads; i++) {
+      executorService.submit(new DownloadTask(startingUrl));
+    }
   }
 
   public void start() {
-    for (int i = 0; i < numThreads; i++) {
-      executorService.submit(new DownloadTask());
-    }
     executorService.shutdown();
     try {
       executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
@@ -52,9 +51,11 @@ public class Downloader {
     }
   }
 
-  private void sendIndex(String content) {
+  private void sendIndex(String url, String content, String links) {
     try {
-      byte[] buffer = content.getBytes();
+      String delimiter = "|||";
+      String combinedString = url + delimiter + links + delimiter + content;
+      byte[] buffer = combinedString.getBytes(StandardCharsets.UTF_8);
       DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
       socket.send(packet);
       System.out.println("Sent to index! ");
@@ -64,6 +65,15 @@ public class Downloader {
   }
 
   private class DownloadTask implements Runnable {
+    private final ConcurrentLinkedQueue<URL> urlsToVisit;
+    private final Set<URL> urlsVisited;
+
+    public DownloadTask(URL startingUrl) {
+      urlsToVisit = new ConcurrentLinkedQueue<>();
+      urlsVisited = new HashSet<>();
+      urlsToVisit.add(startingUrl);
+    }
+
     private void processPage(URL url) {
       try {
         String protocol = url.getProtocol();
@@ -87,7 +97,7 @@ public class Downloader {
         System.out.println(url + " downloaded.");
         // Update index with downloaded content
         String indexContent = doc.body().text();
-        sendIndex(indexContent);
+        sendIndex(url.toString(), indexContent, links.toString());
       } catch (Exception e) {
         System.out.println("Error processing URL " + url + ": " + e.getMessage());
       }
@@ -104,4 +114,5 @@ public class Downloader {
       }
     }
   }
+
 }
