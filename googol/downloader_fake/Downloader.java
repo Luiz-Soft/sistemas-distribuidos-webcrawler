@@ -43,8 +43,23 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 		return qi;
 	}
 
+	@Override
+	public String[] process_page(String url) throws RemoteException {
+		String[] ola = {};
+		
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println(url + " processed");
+		return ola;
+	}
+
 	public static void main(String[] args) throws RemoteException {
 		new Downloader();
 	}
-	
+
 }

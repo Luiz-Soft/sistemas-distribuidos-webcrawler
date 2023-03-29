@@ -10,18 +10,63 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import downloader_fake.DownloaderInterface;
 
 class Queue extends UnicastRemoteObject implements QueueInterface{
-	private ConcurrentLinkedDeque<DownloaderInterface> free_dowloaders;
+	private ConcurrentLinkedDeque<DownloaderInterface> free_downloaders;
 	private ConcurrentLinkedQueue<String> my_queue;
 
 	protected Queue() throws RemoteException {
 		super();
 		this.my_queue = new ConcurrentLinkedQueue<>();
-		this.free_dowloaders = new ConcurrentLinkedDeque<>();
+		this.free_downloaders = new ConcurrentLinkedDeque<>();
+		tryAssignDownloaders();
 	}
+
+	public void tryAssignDownloaders() {
+		Runnable assignDownloadersRunnable = () -> {
+			while (true) {
+				if (free_downloaders.isEmpty() || my_queue.isEmpty()){
+					try {
+						// System.out.println("Waiting");
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					continue;
+				}
+
+				String url = my_queue.poll();
+
+				DownloaderInterface downloader = free_downloaders.poll();
+
+				Thread downloaderThread = new Thread(() -> {
+					String[] urlsFound;
+					try {
+						urlsFound = downloader.process_page(url);
+						
+						if (urlsFound.length > 0) {
+							extend_urls(urlsFound);
+						}
+					
+					} catch (RemoteException e) {
+						my_queue.add(url);
+						return;
+					}
+					
+					free_downloaders.add(downloader);
+				});
+				
+				downloaderThread.start();
+
+			}
+		};
+	
+		Thread assignDownloadersThread = new Thread(assignDownloadersRunnable);
+		assignDownloadersThread.start();
+	}
+	
 
 	@Override
 	public void register_downloader(DownloaderInterface downloader) throws RemoteException {
-		free_dowloaders.add(downloader);
+		free_downloaders.add(downloader);
 		System.out.println("New downloader registed.");
 	}
 
@@ -42,7 +87,7 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 		QueueInterface qi = new Queue();
 		
 		LocateRegistry.createRegistry(1099).rebind("queue_mod", qi);
-		
+
 		System.out.println("Queue Module Ready");
 	}
 }
