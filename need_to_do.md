@@ -7,4 +7,4 @@
 
 - [x] Make login feature in **Search Module**
 
-- [ ] Make **Queue** recovery
+- [x] Make **Queue** recovery
