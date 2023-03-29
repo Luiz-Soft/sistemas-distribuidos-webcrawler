@@ -23,7 +23,7 @@ public class Downloader {
   private final MulticastSocket socket;
   private final InetAddress group;
   private final int PORT;
-  private final String HOST;;
+  private final String HOST;
   private static final String DELIMITER = "|||";
 
   public Downloader(URL startingUrl, int numThreads, int port, String host) throws Exception {
@@ -51,10 +51,9 @@ public class Downloader {
     }
   }
 
-  private void sendIndex(String url, String content, String links) {
+  private void sendIndex(String url, String title, String citation, String content, String links) {
     try {
-      String delimiter = "|||";
-      String combinedString = url + delimiter + links + delimiter + content;
+      String combinedString = url + DELIMITER + links + DELIMITER + title + DELIMITER + citation + DELIMITER + content;
       byte[] buffer = combinedString.getBytes(StandardCharsets.UTF_8);
       DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
       socket.send(packet);
@@ -83,21 +82,29 @@ public class Downloader {
         }
         Document doc = Jsoup.connect(url.toString()).get();
         Elements links = doc.select("a[href]");
+        StringBuilder sb = new StringBuilder();
         for (Element link : links) {
           String href = link.attr("href");
           try {
             URL newUrl = new URL(url, href);
             if (!urlsVisited.contains(newUrl) && !urlsToVisit.contains(newUrl)) {
               urlsToVisit.add(newUrl);
+              sb.append(newUrl.toString()).append(" ");
             }
           } catch (MalformedURLException e) {
             // Ignore malformed URLs
           }
         }
         System.out.println(url + " downloaded.");
+
+        // Get the title and citation of the page
+        String pageTitle = doc.title();
+        String pageCitation = doc.select("p").first().text();
+
         // Update index with downloaded content
         String indexContent = doc.body().text();
-        sendIndex(url.toString(), indexContent, links.toString());
+        String linksAsString = sb.toString();
+        sendIndex(url.toString(), pageTitle, pageCitation, indexContent, linksAsString);
       } catch (Exception e) {
         System.out.println("Error processing URL " + url + ": " + e.getMessage());
       }
@@ -114,5 +121,4 @@ public class Downloader {
       }
     }
   }
-
 }
