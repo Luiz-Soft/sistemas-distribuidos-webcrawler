@@ -120,17 +120,25 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 		downloaders.add(downloader);
 
 		System.out.println("New downloader registed.");
-		smi.print_status();
+		try{
+			smi.print_status();
+		}catch (RemoteException | NullPointerException e){
+			// No smi
+		}
 	}
 
 	@Override
 	public void append_url(String url) throws RemoteException {
+		if (my_queue.size() > 500) return;
+
 		System.out.println(url + " recived");
 		my_queue.add(url);
 	}
 
 	@Override
 	public void extend_urls(List<String> urls) throws RemoteException {
+		if (my_queue.size() > 500) return;
+		
 		for (String url : urls) {
 			System.out.println(url + " added to queue");
 			my_queue.add(url);
@@ -169,7 +177,13 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 	@Override
 	public void remove_down(DownloaderInterface d) throws RemoteException {
 		downloaders.remove(d);
-		smi.print_status();
+		
+		try{
+			smi.print_status();
+		}
+		catch (NullPointerException | RemoteException e){
+			// no smi
+		}
 	}
 
 	

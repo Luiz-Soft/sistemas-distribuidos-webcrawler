@@ -5,9 +5,12 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import indexstoragebarrels.SearchResult;
 import search_module.SearchModuleInterface;
 import utils.ProxyStatus;
 
@@ -34,7 +37,7 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 	}
 
 	
-	private SearchModuleInterface get_server_connection() {		
+	private SearchModuleInterface get_server_connection() {
 		SearchModuleInterface smi = null;
 	
 		for (int i = 0; i < num_of_tries; i++){
@@ -74,8 +77,17 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		if (!resp) System.err.println("Unable to process comand.");
 	}
 
-	private void handle_search() throws RemoteException{
-		smi.search_results();
+	private void handle_search(String[] params) throws RemoteException{
+		List<String> temp = new ArrayList<>();
+
+		for (String string : params) {
+			temp.add(string);
+		}
+
+		List<SearchResult> resp = smi.search_results(temp);
+		for (SearchResult res : resp) {
+			System.out.println(res.toString());
+		}
 	}
 
 	private void handle_register(String username, String password) throws RemoteException{
@@ -127,7 +139,7 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 					handle_add(params[1]);
 					break;
 				case "search":
-					handle_search();
+					handle_search(Arrays.copyOfRange(params, 1, params.length));
 					break;
 				case "register":
 					handle_register(params[1], params[2]);

@@ -13,10 +13,13 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 import cliente.ClienteInterface;
+import indexstoragebarrels.IndexStorageBarrelInterface;
+import indexstoragebarrels.SearchResult;
 import queue.QueueInterface;
 import utils.ProxyStatus;
 
@@ -28,12 +31,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	private QueueInterface queue;
 	private ConcurrentHashMap<String, String> users;
 	private ConcurrentLinkedDeque<ClienteInterface> clientes;
+	private ConcurrentLinkedDeque<IndexStorageBarrelInterface> ibss;
 
 	protected SearchModule() throws RemoteException {
 		super();
 		queue = get_queue_conection();
 		users = init_my_hashmap();
 		clientes = new ConcurrentLinkedDeque<>();
+		ibss = new ConcurrentLinkedDeque<>();
 	}
 
 
@@ -127,10 +132,54 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		return resp;
 	}
 
+	private List<ProxyStatus> get_barrel_status(){
+		List<ProxyStatus> resp = new ArrayList<>();
+
+		for (IndexStorageBarrelInterface ibs : ibss) {
+			String proxyString = ibs.toString();
+			
+			int startIndex = proxyString.indexOf("endpoint:[") + 10;
+			
+			proxyString = proxyString.substring(startIndex);
+			int endIndex = proxyString.indexOf("]");
+
+			String endpoint = proxyString.substring(0, endIndex); // "endpoint:[127.0.0.1:50087](remote)"
+			
+			String[] parts = endpoint.split(":"); // ["endpoint", "127.0.0.1", "50087"](remote)
+			String ip = parts[0];
+			String port = parts[1];
+
+			resp.add(new ProxyStatus(ip, Integer.parseInt(port)));
+		}
+
+		return resp;
+	}
+
+
 
 	@Override
-	public String[] search_results() {
-		throw new UnsupportedOperationException("Unimplemented method 'search_results'");
+	public List<SearchResult> search_results(List<String> terms) {
+		Random random = new Random();
+		int randomElement = random.nextInt(ibss.size());
+		int i = 0;
+		IndexStorageBarrelInterface ibs = ibss.getFirst();
+
+		while (!ibss.isEmpty()){
+			for (IndexStorageBarrelInterface temp : ibss) {
+				if (i == randomElement){
+					ibs = temp;
+				}
+			}
+			
+			try {
+				return ibs.search(terms);
+			} catch (RemoteException e) {
+				ibss.remove(ibs);
+			}
+		}
+
+		return new ArrayList<>();
+		
 	}
 
 	@Override
@@ -162,7 +211,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	}
 
 	@Override
-	public boolean register(String username, String password) {
+	public boolean register(String username, String password) throws RemoteException {
 		String past_key = users.put(username, password);
 
 		if (past_key != null)
@@ -196,15 +245,22 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	}
 
 	@Override
+	public void register_ibs_obj(IndexStorageBarrelInterface ibs) throws RemoteException {
+		ibss.add(ibs);
+		print_status();
+	}
+
+	@Override
 	public void print_status() throws RemoteException {
 		System.out.println("Printing status");
+
 		ConcurrentLinkedDeque<ClienteInterface> active_clients = new ConcurrentLinkedDeque<>();
 		List<List<ProxyStatus>> resp = new ArrayList<>();
 
 		List<ProxyStatus> downloaders = get_queue_status();
 		resp.add(downloaders);
 		
-		List<ProxyStatus> barrels = new ArrayList<>();
+		List<ProxyStatus> barrels = get_barrel_status();
 		resp.add(barrels);
 
 		for (ClienteInterface client : clientes) {
@@ -219,6 +275,9 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		clientes = active_clients;
 	}
 
+	@Override
+	public void ping() throws RemoteException {
+	}
 
 	public static void main(String[] args) throws RemoteException {
 		SearchModuleInterface smi = new SearchModule();

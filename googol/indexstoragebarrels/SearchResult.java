@@ -1,5 +1,8 @@
 package indexstoragebarrels;
-class SearchResult {
+
+import java.io.Serializable;
+
+public class SearchResult implements Serializable {
     private String title;
     private String url;
     private String citation;

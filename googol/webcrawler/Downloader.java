@@ -121,7 +121,7 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 			sendIndex(url.toString(), pageTitle, pageCitation, indexContent, linksAsString);
 
 		} catch (Exception e) {
-			System.out.println("Error processing URL " + urlS + ": " + e.getMessage());
+			// System.out.println("Error processing URL " + urlS + ": " + e.getMessage());
 		}
 
 		return urlsFound;
@@ -160,7 +160,7 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 		try {
 			queue.remove_down(this);
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			// no queue, dont need to remove myself
 		}
 	}
 
