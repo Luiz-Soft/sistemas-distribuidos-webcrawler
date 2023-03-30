@@ -1,5 +1,10 @@
 package search_module;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -21,7 +26,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	protected SearchModule() throws RemoteException {
 		super();
 		queue = null;
-		users = new ConcurrentHashMap<>();
+		users = init_my_hashmap();
 	}
 
 	private QueueInterface get_queue_conection(){
@@ -54,6 +59,39 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		return qi;
 	}
 
+	@SuppressWarnings("unchecked")
+	private ConcurrentHashMap<String, String> init_my_hashmap(){
+		
+		ConcurrentHashMap<String, String> resp = new ConcurrentHashMap<>();
+
+		try {
+			FileInputStream file = new FileInputStream("users.ser");
+			ObjectInputStream in = new ObjectInputStream(file);
+			resp = (ConcurrentHashMap<String, String>) in.readObject();
+			
+			file.close();
+			System.out.println("Loaded by file.");
+		} catch (IOException | ClassNotFoundException e) {
+			System.out.println("New users set.");
+		}
+
+		return resp;
+	}
+
+	public void on_end() {
+		try {
+			FileOutputStream file = new FileOutputStream("users.ser");
+			ObjectOutputStream out = new ObjectOutputStream(file);
+			
+			out.writeObject(users);
+			out.close();
+			file.close();
+			System.out.println("Saved on file.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 
 	@Override
 	public String[] search_results() {
@@ -124,6 +162,10 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		LocateRegistry.createRegistry(1098).rebind("search_mod", smi);
 
 		System.out.println("Search Module Ready");
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			((SearchModule) smi).on_end();
+		}));
 	}
 
 }
