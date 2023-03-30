@@ -4,6 +4,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
+import search_module.SearchModuleInterface;
+import utils.ProxyStatus;
 import webcrawler.DownloaderInterface;
 
 public interface QueueInterface extends Remote{
@@ -14,5 +16,9 @@ public interface QueueInterface extends Remote{
 	public void extend_urls(List<String> urls) throws RemoteException;
 
 	public void ping() throws RemoteException;
+	public List<ProxyStatus> get_status() throws RemoteException;
+	
+	public void setSmi(SearchModuleInterface smi) throws RemoteException;
+	public void remove_down(DownloaderInterface d) throws RemoteException;
 	
 }

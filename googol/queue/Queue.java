@@ -9,23 +9,30 @@ import java.io.ObjectOutputStream;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import search_module.SearchModuleInterface;
+import utils.ProxyStatus;
 import webcrawler.DownloaderInterface;
 
 class Queue extends UnicastRemoteObject implements QueueInterface{
 	private ConcurrentLinkedDeque<DownloaderInterface> free_downloaders;
+	private ConcurrentLinkedDeque<DownloaderInterface> downloaders;
 	private ConcurrentLinkedQueue<String> my_queue;
+	private SearchModuleInterface smi;
 
 	protected Queue() throws RemoteException {
 		super();
 		this.my_queue = init_my_queue();
 		this.free_downloaders = new ConcurrentLinkedDeque<>();
+		this.downloaders = new ConcurrentLinkedDeque<>();
 		tryAssignDownloaders();
 	}
 
+	
 	private void tryAssignDownloaders() {
 		Runnable assignDownloadersRunnable = () -> {
 			while (true) {
@@ -101,11 +108,19 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 			e.printStackTrace();
 		}
 	}
+
+	public void setSmi(SearchModuleInterface smi) throws RemoteException {
+		this.smi = smi;
+	}
+
 	
 	@Override
 	public void register_downloader(DownloaderInterface downloader) throws RemoteException {
 		free_downloaders.add(downloader);
+		downloaders.add(downloader);
+
 		System.out.println("New downloader registed.");
+		smi.print_status();
 	}
 
 	@Override
@@ -126,6 +141,38 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 	public void ping() throws RemoteException {
 	}
 
+	@Override
+	public List<ProxyStatus> get_status() throws RemoteException{
+		System.out.println("ola");
+		List<ProxyStatus> resp = new ArrayList<>();
+
+		for (DownloaderInterface downloader : downloaders) {
+			String proxyString = downloader.toString();
+			
+			int startIndex = proxyString.indexOf("endpoint:[") + 10;
+			
+			proxyString = proxyString.substring(startIndex);
+			int endIndex = proxyString.indexOf("]");
+
+			String endpoint = proxyString.substring(0, endIndex); // "endpoint:[127.0.0.1:50087](remote)"
+			
+			String[] parts = endpoint.split(":"); // ["endpoint", "127.0.0.1", "50087"](remote)
+			String ip = parts[0];
+			String port = parts[1];
+
+			resp.add(new ProxyStatus(ip, Integer.parseInt(port)));
+		}
+
+		return resp;
+	}
+
+	@Override
+	public void remove_down(DownloaderInterface d) throws RemoteException {
+		downloaders.remove(d);
+		smi.print_status();
+	}
+
+	
 	public static void main(String[] args) throws RemoteException {
 		QueueInterface qi = new Queue();
 		

@@ -156,9 +156,22 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 		assignDownloadersThread.start();
 	}
 
+	public void on_end() {
+		try {
+			queue.remove_down(this);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void main(String[] args) {
 		try {
-			new Downloader(4321, "224.3.2.1");
+			Downloader d =  new Downloader(4321, "224.3.2.1");
+			
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				d.on_end();
+			}));
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

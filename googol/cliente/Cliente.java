@@ -4,22 +4,27 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.Scanner;
 
 import search_module.SearchModuleInterface;
+import utils.ProxyStatus;
 
 // import java.util.Scanner;
 
-public class Cliente {
+public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 
 	private static final int num_of_tries = 5;
 
 	private SearchModuleInterface smi;
 	private boolean loged_in;
+	private boolean recive_status;
 
 
-	public Cliente() {
+	public Cliente() throws RemoteException {
 		loged_in = false;
+		recive_status = false;
 		System.out.println("Getting connection ...");
 		
 		smi = get_server_connection();
@@ -28,9 +33,8 @@ public class Cliente {
 		else System.out.println("Connection succesful");
 	}
 
-	private static SearchModuleInterface get_server_connection() {
-		// System.out.println("Getting connection ...");
-		
+	
+	private SearchModuleInterface get_server_connection() {		
 		SearchModuleInterface smi = null;
 	
 		for (int i = 0; i < num_of_tries; i++){
@@ -54,7 +58,14 @@ public class Cliente {
 		
 		// if (smi == null) System.err.println("Connection failled");
 		// else System.out.println("Connection succesful");
-		
+		if (smi != null){
+			try {
+				smi.register_cliente_obj(this);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+
 		return smi;
 	}
 
@@ -100,8 +111,15 @@ public class Cliente {
 		smi.probe_url(url);
 	}
 
-	
-	private void handle_order(String[] params){
+	private void handle_status(Scanner sc) throws RemoteException{
+		System.out.println("Press Enter to quit.");
+		recive_status = true;
+		smi.print_status();
+		sc.nextLine();
+
+	}
+
+	private void handle_order(String[] params, Scanner sc){
 
 		try {
 			switch (params[0]) {
@@ -123,6 +141,10 @@ public class Cliente {
 				case "logout":
 					loged_in = false;
 					System.out.println("Loged out");
+					break;
+				case "status":
+					handle_status(sc);
+					break;
 				default:
 					break;
 			}			
@@ -131,7 +153,7 @@ public class Cliente {
 		} catch (RemoteException | NullPointerException e) {
 			smi = get_server_connection();
 			if (smi == null) System.err.println("Unable to reach search module.");
-			else handle_order(params);
+			else handle_order(params, sc);
 		}
 
 	}
@@ -148,17 +170,38 @@ public class Cliente {
 			
 			String[] params = data.split(" ");
 			
-			handle_order(params);
+			handle_order(params, sc);
 			
 		}
 
 		sc.close();
 	}
 
+	@Override
 
-	public static void main(String[] args) {
-		Cliente my_client = new Cliente();
-		my_client.run();
+	public void print_status(List<List<ProxyStatus>> info) throws RemoteException {
+		System.out.println("#####################");
+		if (!recive_status) return;
+
+		System.out.println("Downloaders:");
+		for (ProxyStatus downloader : info.get(0)) {
+			System.out.println("\t" + downloader.toString());
+		}
+
+		System.out.println("Barrels:");
+		for (ProxyStatus barrel : info.get(1)) {
+			System.out.println("\t" + barrel.toString());
+		}
 	}
 
+
+	public static void main(String[] args) {
+		Cliente my_client;
+		try {
+			my_client = new Cliente();
+			my_client.run();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
 }

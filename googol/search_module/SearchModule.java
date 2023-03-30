@@ -11,9 +11,14 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
+import cliente.ClienteInterface;
 import queue.QueueInterface;
+import utils.ProxyStatus;
 
 public class SearchModule extends UnicastRemoteObject implements SearchModuleInterface {
 
@@ -22,12 +27,15 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	
 	private QueueInterface queue;
 	private ConcurrentHashMap<String, String> users;
+	private ConcurrentLinkedDeque<ClienteInterface> clientes;
 
 	protected SearchModule() throws RemoteException {
 		super();
-		queue = null;
+		queue = get_queue_conection();
 		users = init_my_hashmap();
+		clientes = new ConcurrentLinkedDeque<>();
 	}
+
 
 	private QueueInterface get_queue_conection(){
 		System.out.println("Getting Queue Connection ...");
@@ -36,7 +44,6 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		
 		for (int i = 0; i < num_of_tries; i++) {
 			try {
-				System.out.println(Naming.list("rmi://localhost/"));
 				qi = (QueueInterface) Naming.lookup("rmi://localhost/queue_mod");
 				break;
 			
@@ -54,7 +61,15 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 
 		if (qi == null)
 			System.out.println("Conection failed");
-		else System.out.println("Queue Connection Succesfull.");
+		else {
+			System.out.println("Queue Connection Succesfull.");
+			try {
+				qi.setSmi(this);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+
 
 		return qi;
 	}
@@ -92,6 +107,26 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		}
 	}
 	
+	private List<ProxyStatus> get_queue_status(){
+		List<ProxyStatus> resp = new ArrayList<>();
+
+		try {
+			resp = queue.get_status();
+			return resp;
+		} catch (RemoteException | NullPointerException e) {
+			queue = get_queue_conection();
+		}
+
+		// second try
+		try {
+			resp = queue.get_status();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+
+		return resp;
+	}
+
 
 	@Override
 	public String[] search_results() {
@@ -153,6 +188,35 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		String[] ola = {};
 		
 		return ola;
+	}
+
+	@Override
+	public void register_cliente_obj(ClienteInterface cli) throws RemoteException {
+		clientes.add(cli);
+	}
+
+	@Override
+	public void print_status() throws RemoteException {
+		System.out.println("Printing status");
+		ConcurrentLinkedDeque<ClienteInterface> active_clients = new ConcurrentLinkedDeque<>();
+		List<List<ProxyStatus>> resp = new ArrayList<>();
+
+		List<ProxyStatus> downloaders = get_queue_status();
+		resp.add(downloaders);
+		
+		List<ProxyStatus> barrels = new ArrayList<>();
+		resp.add(barrels);
+
+		for (ClienteInterface client : clientes) {
+			try{
+				client.print_status(resp);
+				active_clients.add(client);
+			} catch (RemoteException e){
+				//
+			}
+		}
+
+		clientes = active_clients;
 	}
 
 
