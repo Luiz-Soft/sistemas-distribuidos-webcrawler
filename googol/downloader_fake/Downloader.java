@@ -5,8 +5,11 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 
 import queue.QueueInterface;
+import webcrawler.DownloaderInterface;
 
 public class Downloader extends UnicastRemoteObject implements DownloaderInterface {
 
@@ -46,8 +49,8 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 	}
 
 	@Override
-	public String[] process_page(String url) throws RemoteException {
-		String[] ola = {};
+	public List<String> process_page(String url) throws RemoteException {
+		List<String> ola = new ArrayList<>();
 		
 		try {
 			Thread.sleep(5000);

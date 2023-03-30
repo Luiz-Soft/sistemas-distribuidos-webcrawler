@@ -9,10 +9,11 @@ import java.io.ObjectOutputStream;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import downloader_fake.DownloaderInterface;
+import webcrawler.DownloaderInterface;
 
 class Queue extends UnicastRemoteObject implements QueueInterface{
 	private ConcurrentLinkedDeque<DownloaderInterface> free_downloaders;
@@ -43,11 +44,11 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 				DownloaderInterface downloader = free_downloaders.poll();
 
 				Thread downloaderThread = new Thread(() -> {
-					String[] new_urls;
+					List<String> new_urls;
 					try {
 						new_urls = downloader.process_page(url);
 						
-						if (new_urls.length > 0) {
+						if (new_urls.size() > 0) {
 							extend_urls(new_urls);
 						}
 					
@@ -114,8 +115,9 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 	}
 
 	@Override
-	public void extend_urls(String[] urls) throws RemoteException {
+	public void extend_urls(List<String> urls) throws RemoteException {
 		for (String url : urls) {
+			System.out.println(url + " added to queue");
 			my_queue.add(url);
 		}
 	}
