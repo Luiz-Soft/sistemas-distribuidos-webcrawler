@@ -7,5 +7,5 @@ import java.util.List;
 import utils.ProxyStatus;
 
 public interface ClienteInterface extends Remote {
-	void print_status(List<List<ProxyStatus>> info) throws RemoteException;
+	void print_status(List<String> top10, List<List<ProxyStatus>> info) throws RemoteException;
 }

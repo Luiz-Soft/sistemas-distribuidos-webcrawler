@@ -133,6 +133,7 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		recive_status = true;
 		smi.print_status();
 		sc.nextLine();
+		recive_status = false;
 
 	}
 
@@ -196,9 +197,12 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 	}
 
 	@Override
-	public void print_status(List<List<ProxyStatus>> info) throws RemoteException {
+	public void print_status(List<String> top10, List<List<ProxyStatus>> info) throws RemoteException {
 		if (!recive_status) return;
 		System.out.println("#####################");
+
+		System.out.println("Top 10 words:");
+		System.out.println("\t"+top10.toString());
 
 		System.out.println("Downloaders:");
 		for (ProxyStatus downloader : info.get(0)) {

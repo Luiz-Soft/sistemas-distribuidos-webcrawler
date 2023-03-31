@@ -13,6 +13,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -32,11 +33,15 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	private ConcurrentHashMap<String, String> users;
 	private ConcurrentLinkedDeque<ClienteInterface> clientes;
 	private ConcurrentLinkedDeque<IndexStorageBarrelInterface> ibss;
+	private ConcurrentHashMap<String, Integer> pesquisas;
+
+	private List<String> top10 = new ArrayList<>();
 
 	protected SearchModule() throws RemoteException {
 		super();
+		load_from_file();
+
 		queue = get_queue_conection();
-		users = init_my_hashmap();
 		clientes = new ConcurrentLinkedDeque<>();
 		ibss = new ConcurrentLinkedDeque<>();
 	}
@@ -79,29 +84,35 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		return qi;
 	}
 
-	@SuppressWarnings("unchecked")
-	private ConcurrentHashMap<String, String> init_my_hashmap(){
+	private void load_from_file(){
 		
-		ConcurrentHashMap<String, String> resp = new ConcurrentHashMap<>();
+		users = new ConcurrentHashMap<>();
+		pesquisas = new ConcurrentHashMap<>();
 
 		try {
-			FileInputStream file = new FileInputStream("users.ser");
+			FileInputStream file = new FileInputStream("smi.ser");
 			ObjectInputStream in = new ObjectInputStream(file);
-			resp = (ConcurrentHashMap<String, String>) in.readObject();
+			SearchModule temp = (SearchModule) in.readObject();
 			
+			temp.users = users;
+			temp.clientes = clientes;
+
+			in.close();
 			file.close();
 			System.out.println("Loaded by file.");
 		} catch (IOException | ClassNotFoundException e) {
 			System.out.println("New users set.");
 		}
-
-		return resp;
 	}
 
 	public void on_end() {
 		try {
-			FileOutputStream file = new FileOutputStream("users.ser");
+			FileOutputStream file = new FileOutputStream("smi.ser");
 			ObjectOutputStream out = new ObjectOutputStream(file);
+			
+			clientes.clear();
+			ibss.clear();
+			queue = null;
 			
 			out.writeObject(users);
 			out.close();
@@ -155,11 +166,53 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		return resp;
 	}
 
+	private void update_words_count(List<String> words) {
+		
+		for (String word : words) {
+			Integer count = pesquisas.get(word);
+			
+			if (count == null) {
+				pesquisas.put(word, 1);
+				count = 1;
+			}
+			else {
+				pesquisas.put(word, count+1);
+			}
 
+		}
+
+		List<String> newTop10 = getTop10Words();
+
+        if (!newTop10.equals(top10)) {
+            top10 = newTop10;
+			try {
+				print_status();
+			} catch (RemoteException e) {
+			}
+        }
+	}
+
+	private List<String> getTop10Words() {
+        PriorityQueue<String> pq = new PriorityQueue<>((w1, w2) -> pesquisas.get(w1) - pesquisas.get(w2));
+        
+		for (String word : pesquisas.keySet()) {
+            pq.offer(word);
+            if (pq.size() > 10) pq.poll();
+        }
+        List<String> top10 = new ArrayList<>();
+        
+		while (!pq.isEmpty()) {
+            top10.add(0, pq.poll());
+        }
+        return top10;
+    }
 
 	@Override
 	public List<SearchResult> search_results(List<String> terms) {
 		System.out.println("Searching ... ");
+
+		update_words_count(terms);
+
 		if (ibss.isEmpty()) return null;
 
 		Random random = new Random();
@@ -270,7 +323,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 
 		for (ClienteInterface client : clientes) {
 			try{
-				client.print_status(resp);
+				client.print_status(top10, resp);
 				active_clients.add(client);
 			} catch (RemoteException e){
 				//

@@ -1,8 +1,7 @@
 package utils;
 
-import java.io.Serializable;
 
-public class ProxyStatus implements Serializable {
+public class ProxyStatus extends Status {
 	private String ip;
 	private int port;
 
