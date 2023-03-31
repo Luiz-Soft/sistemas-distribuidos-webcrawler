@@ -114,7 +114,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 			ibss.clear();
 			queue = null;
 			
-			out.writeObject(users);
+			out.writeObject(this);
 			out.close();
 			file.close();
 			System.out.println("Saved on file.");
@@ -216,11 +216,11 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		if (ibss.isEmpty()) return null;
 
 		Random random = new Random();
-		int randomElement = random.nextInt(ibss.size());
-		int i = 0;
 		IndexStorageBarrelInterface ibs = ibss.getFirst();
-
+		
 		while (!ibss.isEmpty()){
+			int randomElement = random.nextInt(ibss.size());
+			int i = 0;
 			for (IndexStorageBarrelInterface temp : ibss) {
 				if (i == randomElement){
 					ibs = temp;
@@ -291,10 +291,35 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	}
 
 	@Override
-	public String[] probe_url(String url) throws RemoteException {
-		String[] ola = {};
+	public List<String> probe_url(String url) throws RemoteException {
+		if (ibss.isEmpty()) return null;
+
+		List<String> resp = new ArrayList<>();
 		
-		return ola;
+		Random random = new Random();
+		IndexStorageBarrelInterface ibs = ibss.getFirst();
+		
+		System.out.println("Porbing ... ");
+		while (!ibss.isEmpty()){
+			int randomElement = random.nextInt(ibss.size());
+			int i = 0;
+
+			for (IndexStorageBarrelInterface temp : ibss) {
+				if (i == randomElement){
+					ibs = temp;
+				}
+			}
+			
+			try {
+				return ibs.probe(url);
+			} catch (RemoteException e) {
+				ibss.remove(ibs);
+			}
+		}
+
+		if (ibss.isEmpty()) return null;
+
+		return resp;
 	}
 
 	@Override

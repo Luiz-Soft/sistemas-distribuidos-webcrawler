@@ -16,7 +16,7 @@ public interface SearchModuleInterface extends Remote {
 	boolean register(String username, String password) throws RemoteException;
 	int login(String username, String password) throws RemoteException;
 
-	String[] probe_url(String url) throws RemoteException;
+	List<String> probe_url(String url) throws RemoteException;
 	
 	void print_status() throws RemoteException;
 	void register_cliente_obj(ClienteInterface cli) throws RemoteException;

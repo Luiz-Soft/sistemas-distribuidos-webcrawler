@@ -125,7 +125,26 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 			System.out.println("Need to login");
 			return;
 		}
-		smi.probe_url(url);
+		List<String> resp = null;
+
+		try {
+			resp = smi.probe_url(url);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return;
+		}
+
+		if (resp == null){
+			System.err.println("Unable to process comand.");
+			return;
+		}
+
+		System.out.println("Links:");
+		for (String res : resp) {
+			System.out.println("\t" + res);
+		}
+		
 	}
 
 	private void handle_status(Scanner sc) throws RemoteException{

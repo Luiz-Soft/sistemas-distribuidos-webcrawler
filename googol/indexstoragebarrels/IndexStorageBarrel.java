@@ -14,7 +14,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -108,8 +108,7 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 			file.close();
 			System.out.println("Loaded by file.");
 		} catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
-			System.out.println("New queue.");
+			System.out.println("New ibs.");
 		}
 
 	}
@@ -152,6 +151,23 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 
         return searchResults;
     }
+
+	@Override
+	public List<String> probe(String url) throws RemoteException {
+		System.out.println(urlsRelation.toString());
+		System.out.println("Porbing ... ");
+		List<String> resp = new ArrayList<>();
+		
+		HashSet<String> my_set =  urlsRelation.get(url);
+		if (my_set == null) return resp;
+
+		for (String s :  my_set) {
+			resp.add(s);
+		}
+
+		return resp;
+	}
+
 
 	public void run_helper() {
 		Runnable assignDownloadersRunnable = () -> {
@@ -200,9 +216,13 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 
                     // Associate urlDaPagina with urlsContidasNaPagina in urlsRelation
                     String[] containedUrls = urlsContidasNaPagina.split(" ");
-                    HashSet<String> urlsSet = new HashSet<>(Arrays.asList(containedUrls));
-                    urlsRelation.put(urlDaPagina, urlsSet);
-
+					for (String page_url : containedUrls) {
+						HashSet<String> temp = urlsRelation.get(page_url);
+						
+						if(temp == null) temp = new HashSet<>();
+						temp.add(urlDaPagina);
+					}
+                    
                     System.out.println("index and urlsRelation updated.");
 
                 } catch (ArrayIndexOutOfBoundsException e) {
@@ -269,4 +289,6 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 			
 		} catch (RemoteException e) {}
     }
+
+	
 }
