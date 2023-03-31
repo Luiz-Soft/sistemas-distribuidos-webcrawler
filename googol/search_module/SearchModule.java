@@ -125,8 +125,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		// second try
 		try {
 			resp = queue.get_status();
-		} catch (RemoteException e) {
-			e.printStackTrace();
+		} catch (RemoteException | NullPointerException e) {
+			// e.printStackTrace();
 		}
 
 		return resp;
@@ -160,6 +160,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	@Override
 	public List<SearchResult> search_results(List<String> terms) {
 		System.out.println("Searching ... ");
+		if (ibss.isEmpty()) return null;
+
 		Random random = new Random();
 		int randomElement = random.nextInt(ibss.size());
 		int i = 0;
@@ -178,6 +180,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 				ibss.remove(ibs);
 			}
 		}
+
+		if (ibss.isEmpty()) return null;
 
 		return new ArrayList<>();
 		

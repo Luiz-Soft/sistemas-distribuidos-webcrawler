@@ -85,6 +85,11 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		}
 
 		List<SearchResult> resp = smi.search_results(temp);
+		if (resp == null){
+			System.err.println("Unable to process comand.");
+			return;
+		}
+
 		for (SearchResult res : resp) {
 			System.out.println(res.toString());
 		}
@@ -177,8 +182,9 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 			System.out.print(">> ");
 			String data = sc.nextLine();
 			
-			if (data.equals("quit"))
+			if (data.equals("quit")){
 				break;
+			}
 			
 			String[] params = data.split(" ");
 			
@@ -211,8 +217,10 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		try {
 			my_client = new Cliente();
 			my_client.run();
+			System.exit(0);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+		
 	}
 }
