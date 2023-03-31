@@ -24,6 +24,7 @@ import java.util.List;
 public class Downloader extends UnicastRemoteObject implements DownloaderInterface {
 	private QueueInterface queue;
 	private int keepAliveTimer = 10000;
+	private String ip_queue;
 
 	private final MulticastSocket socket;
 	private final InetAddress group;
@@ -31,8 +32,9 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 	private final String HOST;
 	private static final String DELIMITER = "|||";
 
-	public Downloader(int port, String host) throws IOException {
+	public Downloader(int port, String host, String ip_q) throws IOException {
 		super();
+		ip_queue = ip_q;
 		queue = get_queue_conection();
 		queue.register_downloader(this);
 		keepAlive();
@@ -50,7 +52,7 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 		
 		while (qi == null){
 			try {
-				qi = (QueueInterface) Naming.lookup("rmi://localhost/queue_mod");
+				qi = (QueueInterface) Naming.lookup("rmi://"+ip_queue+"/queue_mod");
 				break;
 			
 			} catch (MalformedURLException | RemoteException | NotBoundException e) {
@@ -164,9 +166,17 @@ public class Downloader extends UnicastRemoteObject implements DownloaderInterfa
 		}
 	}
 
+	// localhost
+
 	public static void main(String[] args) {
+		if (args.length == 0){
+			System.out.println("Correct usage\n\t downloader.jar <\"ip:port\"_of_queue>");
+			return;
+		}
+
+
 		try {
-			Downloader d =  new Downloader(4321, "224.3.2.1");
+			Downloader d =  new Downloader(4321, "224.3.2.1", args[0]);
 			
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 				d.on_end();

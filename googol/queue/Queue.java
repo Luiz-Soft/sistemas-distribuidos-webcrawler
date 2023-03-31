@@ -187,9 +187,22 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 
 	
 	public static void main(String[] args) throws RemoteException {
+		Integer port;
+
+		if (args.length == 0){
+			port = 1099;
+		}else {
+			if (args[0].equals("--help")){
+				System.out.println("Correct usage\n\t queue.jar <\"port\"_to_host_on_local>");
+				return;
+			}
+			port = Integer.parseInt(args[0]);
+			System.out.println("Port defined to default (1099)");
+		}
+
 		QueueInterface qi = new Queue();
 		
-		LocateRegistry.createRegistry(1099).rebind("queue_mod", qi);
+		LocateRegistry.createRegistry(port).rebind("queue_mod", qi);
 
 		System.out.println("Queue Module Ready");
 

@@ -39,9 +39,11 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 
 	private SearchModuleInterface smi;
 	private int keepAliveTimer = 10000;
+	private String ip_smi;
 
-    public IndexStorageBarrel() throws RemoteException {
+    public IndexStorageBarrel(String ip) throws RemoteException {
 		load_from_file();
+		ip_smi = ip;
 		smi = null;
 		keepAlive();
     }
@@ -51,7 +53,7 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 		SearchModuleInterface qi = null;
 		
 		try {
-			qi = (SearchModuleInterface) Naming.lookup("rmi://localhost:1098/search_mod");
+			qi = (SearchModuleInterface) Naming.lookup("rmi://"+ip_smi+"/search_mod");
 		} catch (MalformedURLException | RemoteException | NotBoundException e) {
 			System.out.println("Retrying Conection ...");
 		}
@@ -277,10 +279,16 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 	}
 
     public static void main(String[] args) {
+		if (args.length == 0){
+			System.out.println("Correct usage\n\t barrel.jar <\"ip:port\"_of_smi>");
+			return;
+		}
+		
         final IndexStorageBarrel barrel;
 		
+		// localhost:1098
 		try {
-			barrel = new IndexStorageBarrel();
+			barrel = new IndexStorageBarrel(args[0]);
 			barrel.run_helper();
 			
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {

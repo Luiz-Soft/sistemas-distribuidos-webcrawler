@@ -363,9 +363,22 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	}
 
 	public static void main(String[] args) throws RemoteException {
+		Integer port;
+
+		if (args.length == 0){
+			port = 1099;
+		}else {
+			if (args[0].equals("--help")){
+				System.out.println("Correct usage\n\t search.jar <\"port\"_to_host_on_local>");
+				return;
+			}
+			port = Integer.parseInt(args[0]);
+			System.out.println("Port defined to default (1099)");
+		}
+
 		SearchModuleInterface smi = new SearchModule();
 		
-		LocateRegistry.createRegistry(1098).rebind("search_mod", smi);
+		LocateRegistry.createRegistry(port).rebind("search_mod", smi);
 
 		System.out.println("Search Module Ready");
 

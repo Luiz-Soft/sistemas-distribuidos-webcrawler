@@ -23,11 +23,14 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 	private SearchModuleInterface smi;
 	private boolean loged_in;
 	private boolean recive_status;
+	private String ip_smi;
 
 
-	public Cliente() throws RemoteException {
+	public Cliente(String ip) throws RemoteException {
 		loged_in = false;
 		recive_status = false;
+		ip_smi = ip;
+
 		System.out.println("Getting connection ...");
 		
 		smi = get_server_connection();
@@ -43,7 +46,7 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		for (int i = 0; i < num_of_tries; i++){
 			
 			try {
-				smi = (SearchModuleInterface) Naming.lookup("rmi://localhost:1098/search_mod");
+				smi = (SearchModuleInterface) Naming.lookup("rmi://"+ip_smi+"/search_mod");
 				break;
 				
 			} catch (MalformedURLException | RemoteException | NotBoundException e) {
@@ -236,9 +239,16 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 
 
 	public static void main(String[] args) {
+		if (args.length == 0){
+			System.out.println("Correct usage\n\t cliente.jar <\"ip:port\"_of_smi>");
+			return;
+		}
+
+		// localhost:1098
+
 		Cliente my_client;
 		try {
-			my_client = new Cliente();
+			my_client = new Cliente(args[0]);
 			my_client.run();
 			System.exit(0);
 		} catch (RemoteException e) {
