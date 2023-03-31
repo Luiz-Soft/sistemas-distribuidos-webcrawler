@@ -151,7 +151,6 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 
 	@Override
 	public List<ProxyStatus> get_status() throws RemoteException{
-		System.out.println("ola");
 		List<ProxyStatus> resp = new ArrayList<>();
 
 		for (DownloaderInterface downloader : downloaders) {

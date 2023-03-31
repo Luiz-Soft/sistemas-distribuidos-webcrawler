@@ -6,7 +6,7 @@ import java.util.List;
 
 import cliente.ClienteInterface;
 import indexstoragebarrels.IndexStorageBarrelInterface;
-import indexstoragebarrels.SearchResult;
+import utils.SearchResult;
 
 public interface SearchModuleInterface extends Remote {
 	

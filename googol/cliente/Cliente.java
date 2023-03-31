@@ -10,9 +10,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-import indexstoragebarrels.SearchResult;
 import search_module.SearchModuleInterface;
 import utils.ProxyStatus;
+import utils.SearchResult;
 
 // import java.util.Scanner;
 
@@ -190,10 +190,9 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 	}
 
 	@Override
-
 	public void print_status(List<List<ProxyStatus>> info) throws RemoteException {
-		System.out.println("#####################");
 		if (!recive_status) return;
+		System.out.println("#####################");
 
 		System.out.println("Downloaders:");
 		for (ProxyStatus downloader : info.get(0)) {

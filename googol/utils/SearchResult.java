@@ -1,4 +1,4 @@
-package indexstoragebarrels;
+package utils;
 
 import java.io.Serializable;
 

@@ -1,5 +1,10 @@
 package indexstoragebarrels;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -19,11 +24,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import search_module.SearchModuleInterface;
+import utils.SearchResult;
 
 public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStorageBarrelInterface {
     private static final String MULTICAST_GROUP = "224.3.2.1";
     private static final int PORT = 4321;
-    private static final int BUFFER_SIZE = 4096;
     private static final String DELIMITER = "|||";
 
     private HashMap<String, HashSet<String>> index;
@@ -36,13 +41,8 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 	private int keepAliveTimer = 10000;
 
     public IndexStorageBarrel() throws RemoteException {
-        index = new HashMap<String, HashSet<String>>();
-        urlsRelation = new HashMap<String, HashSet<String>>();
-        urlTitles = new HashMap<String, String>();
-        urlCitations = new HashMap<String, String>();
-
-		smi = get_smi_conection();
-		smi.register_ibs_obj(this);
+		load_from_file();
+		smi = null;
 		keepAlive();
     }
 
@@ -50,23 +50,18 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 		
 		SearchModuleInterface qi = null;
 		
-		while (qi == null){
-			try {
-				qi = (SearchModuleInterface) Naming.lookup("rmi://localhost:1098/search_mod");
-				break;
-			
-			} catch (MalformedURLException | RemoteException | NotBoundException e) {
-				System.out.println("Retrying Conection ...");
-			}
-			
-			try {
-				Thread.sleep(500);  // wait 0.5 sec to cone
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				break;	
-			}
+		try {
+			qi = (SearchModuleInterface) Naming.lookup("rmi://localhost:1098/search_mod");
+		} catch (MalformedURLException | RemoteException | NotBoundException e) {
+			System.out.println("Retrying Conection ...");
 		}
-		
+
+		if (qi == null) return qi;
+
+		try{
+			qi.register_ibs_obj(this);
+		} catch (RemoteException e){}
+
 		return qi;
 	}
 
@@ -74,21 +69,16 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 		Runnable keepAliveRunnable = () -> {
 			while (true) {
 				try {
-					Thread.sleep(keepAliveTimer);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-
-				try {
 					smi.ping();
 					continue;
-				} catch (RemoteException e) {
+				} catch (RemoteException | NullPointerException e) {
 					smi = get_smi_conection();
 				}
 
 				try {
-					smi.register_ibs_obj(this);
-				} catch (RemoteException e) {
+					Thread.sleep(keepAliveTimer);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 
 			}
@@ -98,9 +88,36 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 		assignDownloadersThread.start();
 	}
 
+	public void load_from_file() {
+		
+		index = new HashMap<String, HashSet<String>>();
+        urlsRelation = new HashMap<String, HashSet<String>>();
+        urlTitles = new HashMap<String, String>();
+        urlCitations = new HashMap<String, String>();
+		
+		try {
+			FileInputStream file = new FileInputStream("ibs.ser");
+			ObjectInputStream in = new ObjectInputStream(file);
+			IndexStorageBarrel temp = (IndexStorageBarrel) in.readObject();
+			
+			index = temp.index;
+			urlsRelation = temp.urlsRelation;
+			urlTitles = temp.urlTitles;
+			urlCitations = temp.urlCitations;
+
+			file.close();
+			System.out.println("Loaded by file.");
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+			System.out.println("New queue.");
+		}
+
+	}
 
 	@Override
     public List<SearchResult> search(List<String> terms) throws RemoteException {
+		System.out.println("Searching for " + terms.get(0));
+
         Set<String> commonUrls = new HashSet<>();
 
         boolean firstTerm = true;
@@ -136,18 +153,27 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
         return searchResults;
     }
 
+	public void run_helper() {
+		Runnable assignDownloadersRunnable = () -> {
+			run();
+		};
+
+		Thread assignDownloadersThread = new Thread(assignDownloadersRunnable);
+		assignDownloadersThread.start();
+	}
+
     public void run() {
         try {
             InetAddress group = InetAddress.getByName(MULTICAST_GROUP);
             socket = new MulticastSocket(PORT);
             socket.joinGroup(group);
 
-            byte[] buffer = new byte[BUFFER_SIZE];
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
+			
             while (true) {
+				byte[] buffer = new byte[socket.getReceiveBufferSize()];
+				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
-
+				
                 String data = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8);
                 String[] indexData = data.split(Pattern.quote(DELIMITER));
 
@@ -177,7 +203,7 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
                     HashSet<String> urlsSet = new HashSet<>(Arrays.asList(containedUrls));
                     urlsRelation.put(urlDaPagina, urlsSet);
 
-                    System.out.println("index and urlsRelation updated "+ urlDaPagina);
+                    System.out.println("index and urlsRelation updated.");
 
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println("Received malformed data. Ignoring...");
@@ -213,12 +239,34 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
         }
     }
 
+	public void on_end() {
+		try {
+			FileOutputStream file = new FileOutputStream("ibs.ser");
+			ObjectOutputStream out = new ObjectOutputStream(file);
+			
+			socket = null;
+			smi = null;
+
+			out.writeObject(this);
+			out.close();
+			file.close();
+			System.out.println("Saved on file.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
     public static void main(String[] args) {
-        IndexStorageBarrel barrel;
+        final IndexStorageBarrel barrel;
+		
 		try {
 			barrel = new IndexStorageBarrel();
-			barrel.run();
-		} catch (RemoteException e) {
-		}
+			barrel.run_helper();
+			
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				barrel.on_end();
+			}));
+			
+		} catch (RemoteException e) {}
     }
 }

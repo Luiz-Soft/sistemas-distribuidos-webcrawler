@@ -19,9 +19,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 import cliente.ClienteInterface;
 import indexstoragebarrels.IndexStorageBarrelInterface;
-import indexstoragebarrels.SearchResult;
 import queue.QueueInterface;
 import utils.ProxyStatus;
+import utils.SearchResult;
 
 public class SearchModule extends UnicastRemoteObject implements SearchModuleInterface {
 
@@ -159,6 +159,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 
 	@Override
 	public List<SearchResult> search_results(List<String> terms) {
+		System.out.println("Searching ... ");
 		Random random = new Random();
 		int randomElement = random.nextInt(ibss.size());
 		int i = 0;
