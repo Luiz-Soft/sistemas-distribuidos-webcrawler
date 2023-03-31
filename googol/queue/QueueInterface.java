@@ -4,9 +4,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
+import downloader.DownloaderInterface;
 import search_module.SearchModuleInterface;
 import utils.ProxyStatus;
-import webcrawler.DownloaderInterface;
 
 public interface QueueInterface extends Remote{
 

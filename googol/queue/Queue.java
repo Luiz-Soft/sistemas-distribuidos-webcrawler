@@ -14,9 +14,9 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import downloader.DownloaderInterface;
 import search_module.SearchModuleInterface;
 import utils.ProxyStatus;
-import webcrawler.DownloaderInterface;
 
 class Queue extends UnicastRemoteObject implements QueueInterface{
 	private ConcurrentLinkedDeque<DownloaderInterface> free_downloaders;
