@@ -221,7 +221,10 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 					for (String page_url : containedUrls) {
 						HashSet<String> temp = urlsRelation.get(page_url);
 						
-						if(temp == null) temp = new HashSet<>();
+						if(temp == null){
+							temp = new HashSet<>();
+							urlsRelation.put(page_url, temp);
+						};
 						temp.add(urlDaPagina);
 					}
                     

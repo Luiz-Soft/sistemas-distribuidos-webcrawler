@@ -1,4 +1,4 @@
 *.ser
 *.class
-*/.idea
-*/.vscode
+**/.idea
+**/.vscode
