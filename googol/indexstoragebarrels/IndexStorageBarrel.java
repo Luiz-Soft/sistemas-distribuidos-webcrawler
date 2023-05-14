@@ -156,7 +156,6 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 
 	@Override
 	public List<String> probe(String url) throws RemoteException {
-		System.out.println(urlsRelation.toString());
 		System.out.println("Porbing ... ");
 		List<String> resp = new ArrayList<>();
 		

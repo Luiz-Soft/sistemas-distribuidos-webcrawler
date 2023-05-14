@@ -35,12 +35,14 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 	private ConcurrentLinkedDeque<IndexStorageBarrelInterface> ibss;
 	private ConcurrentHashMap<String, Integer> pesquisas;
 
+	private String queue_ip_adress;
 	private List<String> top10 = new ArrayList<>();
 
-	protected SearchModule() throws RemoteException {
+	protected SearchModule(String queue_ip) throws RemoteException {
 		super();
 		load_from_file();
-
+		
+		queue_ip_adress = queue_ip;
 		queue = get_queue_conection();
 		clientes = new ConcurrentLinkedDeque<>();
 		ibss = new ConcurrentLinkedDeque<>();
@@ -54,7 +56,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		
 		for (int i = 0; i < num_of_tries; i++) {
 			try {
-				qi = (QueueInterface) Naming.lookup("rmi://localhost/queue_mod");
+				qi = (QueueInterface) Naming.lookup("rmi://"+queue_ip_adress+"/queue_mod");
 				break;
 			
 			} catch (MalformedURLException | RemoteException | NotBoundException e) {
@@ -366,13 +368,13 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 		Integer port;
 
 		if (args.length == 0 || args[0].equals("--help")){
-			System.out.println("Correct usage\n\t search.jar <\"port\"_to_host_on_local>");
+			System.out.println("Correct usage\n\t search.jar <\"port\"_to_host_on_local> <\"ip:port\"_of_queue>");
 			return;
 		}else {
 			port = Integer.parseInt(args[0]);
 		}
 
-		SearchModuleInterface smi = new SearchModule();
+		SearchModuleInterface smi = new SearchModule(args[1]);
 		
 		LocateRegistry.createRegistry(port).rebind("search_mod", smi);
 
