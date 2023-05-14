@@ -94,8 +94,8 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 			ObjectInputStream in = new ObjectInputStream(file);
 			SearchModule temp = (SearchModule) in.readObject();
 			
-			temp.users = users;
-			temp.clientes = clientes;
+			users = temp.users;
+			clientes = temp.clientes;
 
 			in.close();
 			file.close();

@@ -11,6 +11,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -22,16 +23,38 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 	private ConcurrentLinkedDeque<DownloaderInterface> free_downloaders;
 	private ConcurrentLinkedDeque<DownloaderInterface> downloaders;
 	private ConcurrentLinkedQueue<String> my_queue;
+	private ConcurrentHashMap<String, Boolean> already_seen;
 	private SearchModuleInterface smi;
 
 	protected Queue() throws RemoteException {
 		super();
-		this.my_queue = init_my_queue();
+		load_from_file();
+		
 		this.free_downloaders = new ConcurrentLinkedDeque<>();
 		this.downloaders = new ConcurrentLinkedDeque<>();
 		tryAssignDownloaders();
 	}
 
+	private void load_from_file(){
+
+		my_queue = new ConcurrentLinkedQueue<>();
+		already_seen = new ConcurrentHashMap<>();
+
+		try {
+			FileInputStream file = new FileInputStream("my_queue.ser");
+			ObjectInputStream in = new ObjectInputStream(file);
+			Queue temp = (Queue) in.readObject();
+			
+			my_queue = temp.my_queue;
+			already_seen = temp.already_seen;
+
+			file.close();
+			System.out.println("Loaded by file.");
+
+		} catch (IOException | ClassNotFoundException e) {
+			System.out.println("New queue.");
+		}
+	}
 	
 	private void tryAssignDownloaders() {
 		Runnable assignDownloadersRunnable = () -> {
@@ -76,31 +99,16 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 		assignDownloadersThread.start();
 	}
 	
-	@SuppressWarnings("unchecked")
-	private ConcurrentLinkedQueue<String> init_my_queue(){
-		
-		ConcurrentLinkedQueue<String> resp = new ConcurrentLinkedQueue<>();
-
-		try {
-			FileInputStream file = new FileInputStream("my_queue.ser");
-			ObjectInputStream in = new ObjectInputStream(file);
-			resp = (ConcurrentLinkedQueue<String>) in.readObject();
-			
-			file.close();
-			System.out.println("Loaded by file.");
-		} catch (IOException | ClassNotFoundException e) {
-			System.out.println("New queue.");
-		}
-
-		return resp;
-	}
-
 	public void on_end() {
 		try {
 			FileOutputStream file = new FileOutputStream("my_queue.ser");
 			ObjectOutputStream out = new ObjectOutputStream(file);
 			
-			out.writeObject(my_queue);
+			free_downloaders.clear();
+			downloaders.clear();
+			smi = null;
+
+			out.writeObject(this);
 			out.close();
 			file.close();
 			System.out.println("Saved on file.");
@@ -130,7 +138,9 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 	@Override
 	public void append_url(String url) throws RemoteException {
 		if (my_queue.size() > 500) return;
-
+		if (already_seen.containsKey(url)) return;
+		
+		already_seen.put(url, true);
 		System.out.println(url + " recived");
 		my_queue.add(url);
 	}
@@ -140,8 +150,10 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 		if (my_queue.size() > 500) return;
 		
 		for (String url : urls) {
+			if (already_seen.containsKey(url)) continue;
 			System.out.println(url + " added to queue");
 			my_queue.add(url);
+			already_seen.put(url, true);
 		}
 	}
 
