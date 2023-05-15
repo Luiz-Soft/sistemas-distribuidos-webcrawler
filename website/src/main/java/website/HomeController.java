@@ -73,7 +73,6 @@ public class HomeController {
 		
 		try {
 			if (cli != null &&  cli.handle_add(url)){
-				System.out.println("Recived: " + url);
 				model.addAttribute("successMessage", "URL processed successfully");
 			}else{
 				model.addAttribute("successMessage", "Failed to process URL");

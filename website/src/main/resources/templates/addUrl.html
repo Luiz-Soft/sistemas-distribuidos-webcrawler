@@ -4,7 +4,10 @@
     <title>URL Processing</title>
 </head>
 <body>
-    <h1>URL Processing Form</h1>
+	<header th:insert="~{navbar}"></header>
+
+
+	<h1>URL Processing Form</h1>
     <form action="#" th:action="@{/add-url}" method="post">
         <p>
             <label for="url">Enter a URL:</label>

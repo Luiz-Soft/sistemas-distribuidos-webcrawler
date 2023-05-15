@@ -4,6 +4,8 @@
     <title>Probe Results</title>
 </head>
 <body>
+	<header th:insert="~{navbar}"></header>
+
     <h1>links</h1>
     <ul>
         <li th:each="result : ${searchResults}" th:text="${result}"></li>
