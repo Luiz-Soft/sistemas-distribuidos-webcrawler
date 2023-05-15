@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,12 +76,23 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
         return smi;
     }
 
-    private void handle_add(String url) throws RemoteException{
+	@Override
+	public void ping() throws RemoteException {}
+
+    @Override
+    public boolean handle_add(String url) throws RemoteException{
+		System.out.println("Tempo");
         boolean resp = smi.querie_url(url);
-        if (!resp) System.err.println("Unable to process comand.");
+        
+		if (!resp) {
+			System.err.println("Unable to process comand.");
+			resp = false;
+		}
+
+		return true;
     }
 
-    private void handle_search(String[] params) throws RemoteException{
+    public List<SearchResult> handle_search(String[] params) throws RemoteException{
         List<String> temp = new ArrayList<>();
 
         for (String string : params) {
@@ -90,12 +102,14 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
         List<SearchResult> resp = smi.search_results(temp);
         if (resp == null){
             System.err.println("Unable to process comand.");
-            return;
+            return null;
         }
 
         for (SearchResult res : resp) {
             System.out.println(res.toString());
         }
+		
+		return resp;
     }
 
     private void handle_register(String username, String password) throws RemoteException{
@@ -249,6 +263,9 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
         Cliente my_client;
         try {
             my_client = new Cliente(args[0]);
+
+            LocateRegistry.createRegistry(1097).rebind("cliente", my_client);
+
             my_client.run();
             System.exit(0);
         } catch (RemoteException e) {
