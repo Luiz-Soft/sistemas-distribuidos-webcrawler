@@ -1,12 +1,12 @@
 package search_module;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.util.List;
-
 import cliente.ClienteInterface;
 import indexstoragebarrels.IndexStorageBarrelInterface;
 import utils.SearchResult;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.List;
 
 public interface SearchModuleInterface extends Remote {
 

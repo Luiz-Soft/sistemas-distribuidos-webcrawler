@@ -1,11 +1,11 @@
 package queue;
 
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import downloader.DownloaderInterface;
+import search_module.SearchModuleInterface;
+import utils.ProxyStatus;
+
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -14,10 +14,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import downloader.DownloaderInterface;
-import search_module.SearchModuleInterface;
-import utils.ProxyStatus;
 
 class Queue extends UnicastRemoteObject implements QueueInterface{
     private ConcurrentLinkedDeque<DownloaderInterface> free_downloaders;

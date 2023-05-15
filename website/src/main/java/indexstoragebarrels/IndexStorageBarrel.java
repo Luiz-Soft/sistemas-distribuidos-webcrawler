@@ -1,10 +1,9 @@
 package indexstoragebarrels;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import search_module.SearchModuleInterface;
+import utils.SearchResult;
+
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -14,17 +13,9 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import search_module.SearchModuleInterface;
-import utils.SearchResult;
 
 public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStorageBarrelInterface {
     private static final String MULTICAST_GROUP = "224.3.2.1";

@@ -1,11 +1,11 @@
 package indexstoragebarrels;
 
 
+import utils.SearchResult;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
-
-import utils.SearchResult;
 
 
 public interface IndexStorageBarrelInterface extends Remote{

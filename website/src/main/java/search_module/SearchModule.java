@@ -1,10 +1,12 @@
 package search_module;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import cliente.ClienteInterface;
+import indexstoragebarrels.IndexStorageBarrelInterface;
+import queue.QueueInterface;
+import utils.ProxyStatus;
+import utils.SearchResult;
+
+import java.io.*;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -17,12 +19,6 @@ import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-
-import cliente.ClienteInterface;
-import indexstoragebarrels.IndexStorageBarrelInterface;
-import queue.QueueInterface;
-import utils.ProxyStatus;
-import utils.SearchResult;
 
 public class SearchModule extends UnicastRemoteObject implements SearchModuleInterface {
 

@@ -1,18 +1,13 @@
 package downloader;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.MulticastSocket;
-import java.net.URL;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import queue.QueueInterface;
 
+import java.io.IOException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;

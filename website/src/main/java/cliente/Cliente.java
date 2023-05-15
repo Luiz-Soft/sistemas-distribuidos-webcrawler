@@ -1,5 +1,9 @@
 package cliente;
 
+import search_module.SearchModuleInterface;
+import utils.ProxyStatus;
+import utils.SearchResult;
+
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -9,10 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-
-import search_module.SearchModuleInterface;
-import utils.ProxyStatus;
-import utils.SearchResult;
 
 // import java.util.Scanner;
 
