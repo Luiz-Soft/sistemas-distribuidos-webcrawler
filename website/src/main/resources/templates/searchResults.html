@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Search Results</title>
+	<title>Search Results</title>
 </head>
 <body>
 	<form action="#" th:action="@{/search}" method="post">
-        <p>
-            <label for="terms">Enter search terms:</label>
-            <input type="text" id="terms" name="terms" />
-        </p>
-        <p>
-            <button type="submit">Search</button>
-        </p>
-    </form>
-    <h1>Search Results</h1>
-    <ul>
+		<p>
+			<label for="terms">Enter search terms:</label>
+			<input type="text" id="terms" name="terms" />
+		</p>
+		<p>
+			<button type="submit">Search</button>
+		</p>
+	</form>
+	<h1>Search Results</h1>
+	<ul>
 		<div th:each="item : ${items}">
 			<h2 th:text="${item.title}"></h2>
 			<a th:href="${item.url}" th:text="${item.url}"></a>
 			<p th:text="${item.citation}"></p>
+			<a th:href="@{/probe(q=${item.url})}">
+				<button type="button">Probe</button>
+			</a>
 		</div>
-        <li th:each="result : ${searchResults}" th:text="${result}"></li>
-    </ul>
+		<li th:each="result : ${searchResults}" th:text="${result}"></li>
+	</ul>
 </body>
 </html>
+

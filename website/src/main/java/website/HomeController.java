@@ -56,6 +56,12 @@ public class HomeController {
     }
 
 
+	@GetMapping("/sorry")
+    public String sorry(Model model) {
+        return "sorry";
+    }
+
+
 	@GetMapping("/add-url")
     public String home(Model model) {
         return "addUrl";
@@ -119,6 +125,29 @@ public class HomeController {
 		}
 	
 		return "searchResults";
+	}
+
+
+	@GetMapping("/probe")
+	public String showProbeResults(@RequestParam("q") String query, Model model) {
+		ClienteInterface cli = get_server_connection();
+
+		if (cli == null){
+			return "redirect:/sorry";
+		}
+		
+		List<String> results = null;
+		try {
+			results = cli.sudo_handle_probe(query);
+		} catch (RemoteException e) {
+			// e.printStackTrace();
+		}
+		
+		if (results != null){
+			model.addAttribute("searchResults", results);
+		}
+		
+		return "probeUrl";
 	}
 
 }

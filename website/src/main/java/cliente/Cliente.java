@@ -42,6 +42,15 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 
 
     private SearchModuleInterface get_server_connection() {
+		if (smi != null){
+			try {
+				smi.ping();
+			} catch (RemoteException e) {
+				// pass
+			}
+			return smi;
+		}
+
         SearchModuleInterface smi = null;
 
         for (int i = 0; i < num_of_tries; i++){
@@ -81,6 +90,8 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 
     @Override
     public boolean handle_add(String url) throws RemoteException{
+		get_server_connection();
+
 		System.out.println("Tempo");
         boolean resp = smi.querie_url(url);
         
@@ -92,7 +103,10 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		return true;
     }
 
+	@Override
     public List<SearchResult> handle_search(String[] params) throws RemoteException{
+		smi = get_server_connection();
+
         List<String> temp = new ArrayList<>();
 
         for (String string : params) {
@@ -111,6 +125,27 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		
 		return resp;
     }
+
+	@Override
+	public List<String> sudo_handle_probe(String url) throws RemoteException {
+		get_server_connection();
+		
+        List<String> resp = null;
+
+		try {
+            resp = smi.probe_url(url);
+        } catch (Exception e) {
+			smi = get_server_connection();
+            return null;
+        }
+
+        if (resp == null){
+            System.err.println("Unable to process comand.");
+            return null;
+    	}
+
+		return resp;
+	}
 
     private void handle_register(String username, String password) throws RemoteException{
         boolean resp = smi.register(username, password);
