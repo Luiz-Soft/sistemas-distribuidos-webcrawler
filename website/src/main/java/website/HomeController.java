@@ -92,27 +92,41 @@ public class HomeController {
 
 	@PostMapping("/search")
     public String search(@RequestParam("terms") String terms, Model model) {
-        return "redirect:/results?q=" + terms.replace(' ', '+'); // Redirect back to the search form
+        return "redirect:/results?q=" + terms.replace(' ', '+') + "&source=0"; // Redirect back to the search form
     }
 
 	@GetMapping("/results")
-	public String showSearchResults(@RequestParam("q") String query, Model model) {
+	public String showSearchResults(@RequestParam("q") String query, @RequestParam("source") Integer source, Model model) {
 		ClienteInterface cli = get_server_connection();
 
 		if (cli == null){
 			return "redirect:/search";
 		}
 
+		model.addAttribute("self_query", query);
+
 		// Process the search query
 		String[] terms = query.split("\\s");
 		
 		List<SearchResult> results = null;
-		try {
-			results = cli.handle_search(terms);
-		} catch (RemoteException e) {
-			// e.printStackTrace();
+		
+		if (source == 0){
+			model.addAttribute("toggle_text", "Toggle Hacker News");
+			model.addAttribute("source_val", 1);
+
+			try {
+				results = cli.handle_search(terms);
+			} catch (RemoteException e) {
+				// e.printStackTrace();
+			}
+
+		}else{
+			model.addAttribute("toggle_text", "Toggle Googol");
+			model.addAttribute("source_val", 0);
 		}
 
+
+		
 		if (results != null){
 			List<String> temp = new ArrayList<>();
 
