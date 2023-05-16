@@ -108,7 +108,7 @@ public class IndexStorageBarrel extends UnicastRemoteObject implements IndexStor
 
     @Override
     public List<SearchResult> search(List<String> terms) throws RemoteException {
-        System.out.println("Searching for " + terms.get(0));
+        System.out.println("Searching for " + String.join(", ", terms));
 
         Set<String> commonUrls = new HashSet<>();
 

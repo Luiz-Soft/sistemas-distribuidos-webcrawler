@@ -104,7 +104,7 @@ public class HomeController {
 		}
 
 		// Process the search query
-		String[] terms = query.split("\\+");
+		String[] terms = query.split("\\s");
 		
 		List<SearchResult> results = null;
 		try {

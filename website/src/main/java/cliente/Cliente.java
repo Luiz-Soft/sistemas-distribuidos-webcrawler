@@ -26,11 +26,16 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
     private boolean recive_status;
     private String ip_smi;
 
+	private boolean print_stf;
 
-    public Cliente(String ip) throws RemoteException {
+    public void setPrint_stf(boolean print_stf) {this.print_stf = print_stf;}
+
+
+	public Cliente(String ip) throws RemoteException {
         loged_in = false;
         recive_status = false;
         ip_smi = ip;
+		print_stf = true;
 
         System.out.println("Getting connection ...");
 
@@ -45,10 +50,10 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		if (smi != null){
 			try {
 				smi.ping();
+				return smi;
 			} catch (RemoteException e) {
 				// pass
 			}
-			return smi;
 		}
 
         SearchModuleInterface smi = null;
@@ -118,6 +123,8 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
             System.err.println("Unable to process comand.");
             return null;
         }
+
+		if (!print_stf) return resp;
 
         for (SearchResult res : resp) {
             System.out.println(res.toString());
@@ -289,7 +296,7 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 
     public static void main(String[] args) {
         if (args.length == 0){
-            System.out.println("Correct usage\n\t cliente.jar <\"ip:port\"_of_smi>");
+            System.out.println("Correct usage\n\t cliente.jar <\"ip:port\"_of_smi> [<\"ip\"_to_host_on_local>]");
             return;
         }
 
@@ -299,10 +306,15 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
         try {
             my_client = new Cliente(args[0]);
 
-            LocateRegistry.createRegistry(1097).rebind("cliente", my_client);
+			if (args.length == 2){
+				LocateRegistry.createRegistry(Integer.parseInt(args[1])).rebind("cliente", my_client);
+				my_client.setPrint_stf(false);
+			}else{
+	            my_client.run();
+			}
+			
+			// System.exit(0);
 
-            my_client.run();
-            System.exit(0);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
