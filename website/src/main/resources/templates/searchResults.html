@@ -6,15 +6,15 @@
 <body>
 	<header th:insert="~{navbar}"></header>
 
-	<form action="#" th:action="@{/results}" method="get">
-		<p>
-			<label for="terms">Enter search terms:</label>
-			<input type="text" id="terms" name="q" />
-		</p>
-		<p>
-			<button type="submit" th:value="${q}">Search</button>
-		</p>
-	</form>
+	<form action="#" th:action="@{/search}" method="post">
+        <p>
+            <label for="terms">Enter search terms:</label>
+            <input type="text" id="terms" name="terms" />
+        </p>
+        <p>
+            <button type="submit">Search</button>
+        </p>
+    </form>
 
 	<form action="#" th:action="@{/results}" method="get">
 		<p>

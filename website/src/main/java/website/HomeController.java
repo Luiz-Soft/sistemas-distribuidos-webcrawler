@@ -123,6 +123,9 @@ public class HomeController {
 		}else{
 			model.addAttribute("toggle_text", "Toggle Googol");
 			model.addAttribute("source_val", 0);
+			System.out.println(query);
+			results = HackerNewsSearch.searchHackerNews(query);
+			// searchHackerNews(query);
 		}
 
 
