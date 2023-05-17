@@ -24,6 +24,7 @@ import utils.SearchResult;
 
 public class HackerNewsSearch {
 	private static HashMap<String, HashSet<Integer>> index = new HashMap<>();
+	private static HashSet<Integer> ids_seen = new HashSet<>();
 
 	public static String get_json(String url) throws IOException, InterruptedException{
 		HttpClient client = HttpClient.newHttpClient();
@@ -54,9 +55,12 @@ public class HackerNewsSearch {
 		Runnable assignDownloadersRunnable = () -> {
 			try {
 				JSONArray data = new JSONArray(get_json("https://hacker-news.firebaseio.com/v0/topstories.json"));
-
+				
 				for (int i = 0; i < data.length(); i++) {
 					int id = data.getInt(i);
+					
+					if (ids_seen.contains(id)) continue;
+					ids_seen.add(id);
 					
 					try {
 						JSONObject page = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/item/"+id+".json"));
@@ -162,6 +166,7 @@ public class HackerNewsSearch {
     }
 
 	public static List<SearchResult> searchHackerTopNews(String query, SearchModuleInterface smi) {
+		scrape_top_stories(); // upadte
 		Set<Integer> data = search(Arrays.asList(query.split("\\s")));
 		
 		List<SearchResult> resp = new ArrayList<>();
