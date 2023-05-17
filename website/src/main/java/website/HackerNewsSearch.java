@@ -19,7 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import cliente.ClienteInterface;
+import search_module.SearchModuleInterface;
 import utils.SearchResult;
 
 public class HackerNewsSearch {
@@ -161,7 +161,7 @@ public class HackerNewsSearch {
 		return null;
     }
 
-	public static List<SearchResult> searchHackerTopNews(String query, ClienteInterface cli) {
+	public static List<SearchResult> searchHackerTopNews(String query, SearchModuleInterface smi) {
 		Set<Integer> data = search(Arrays.asList(query.split("\\s")));
 		
 		List<SearchResult> resp = new ArrayList<>();
@@ -171,7 +171,7 @@ public class HackerNewsSearch {
 				JSONObject page = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/item/"+id+".json"));
 
 				try {
-					cli.handle_add("https://news.ycombinator.com/item?id="+id);
+					smi.querie_url("https://news.ycombinator.com/item?id="+id);
 				} catch (RemoteException e) {
 					System.out.println("Error remote");
 				}
@@ -211,7 +211,7 @@ public class HackerNewsSearch {
     }
 
 
-	public static boolean index_user_stories(String username, ClienteInterface cli) {
+	public static boolean index_user_stories(String username, SearchModuleInterface smi) {
 		JSONObject data;
 		try {
 			data = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/user/"+username+".json"));
@@ -231,7 +231,7 @@ public class HackerNewsSearch {
 					JSONObject page = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/item/"+id+".json"));
 					// System.out.println(page.getString("type"));
 					if (page.getString("type").equals("story")){
-						cli.handle_add("https://news.ycombinator.com/item?id="+id);
+						smi.querie_url("https://news.ycombinator.com/item?id="+id);
 					}
 				
 				} catch (IOException | InterruptedException | org.json.JSONException e) {

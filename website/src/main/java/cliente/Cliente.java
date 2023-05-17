@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,16 +25,10 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
     private boolean recive_status;
     private String ip_smi;
 
-	private boolean print_stf;
-
-    public void setPrint_stf(boolean print_stf) {this.print_stf = print_stf;}
-
-
 	public Cliente(String ip) throws RemoteException {
         loged_in = false;
         recive_status = false;
         ip_smi = ip;
-		print_stf = true;
 
         System.out.println("Getting connection ...");
 
@@ -90,14 +83,11 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
         return smi;
     }
 
-	@Override
-	public void ping() throws RemoteException {}
 
-    @Override
+
     public boolean handle_add(String url) throws RemoteException{
 		get_server_connection();
 
-		System.out.println("Tempo");
         boolean resp = smi.querie_url(url);
         
 		if (!resp) {
@@ -108,7 +98,6 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 		return true;
     }
 
-	@Override
     public List<SearchResult> handle_search(String[] params) throws RemoteException{
 		smi = get_server_connection();
 
@@ -124,35 +113,12 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
             return null;
         }
 
-		if (!print_stf) return resp;
-
         for (SearchResult res : resp) {
             System.out.println(res.toString());
         }
 		
 		return resp;
     }
-
-	@Override
-	public List<String> sudo_handle_probe(String url) throws RemoteException {
-		get_server_connection();
-		
-        List<String> resp = null;
-
-		try {
-            resp = smi.probe_url(url);
-        } catch (Exception e) {
-			smi = get_server_connection();
-            return null;
-        }
-
-        if (resp == null){
-            System.err.println("Unable to process comand.");
-            return null;
-    	}
-
-		return resp;
-	}
 
     private void handle_register(String username, String password) throws RemoteException{
         boolean resp = smi.register(username, password);
@@ -306,12 +272,7 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
         try {
             my_client = new Cliente(args[0]);
 
-			if (args.length == 2){
-				LocateRegistry.createRegistry(Integer.parseInt(args[1])).rebind("cliente", my_client);
-				my_client.setPrint_stf(false);
-			}else{
-	            my_client.run();
-			}
+			my_client.run();
 			
 			// System.exit(0);
 

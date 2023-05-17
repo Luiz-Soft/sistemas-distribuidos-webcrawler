@@ -1,7 +1,5 @@
 package website;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,33 +11,34 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import cliente.ClienteInterface;
+import search_module.SearchModuleInterface;
 import utils.SearchResult;
 
 @Controller
 public class HomeController {
     private static final int num_of_tries = 5;
-	private ClienteInterface cliente = null;
+	private SearchModuleInterface search_mod = null;
 
-    private ClienteInterface get_server_connection() {
-		if (cliente != null){
+    private SearchModuleInterface get_server_connection() {
+		if (search_mod != null){
 			try {
-				cliente.ping();
-				return cliente;
+				search_mod.ping();
+				return search_mod;
 			} catch (RemoteException e) {
 				// continua
 			}
 		}
 
-        ClienteInterface cli = null;
+        SearchModuleInterface smi = null;
 
         for (int i = 0; i < num_of_tries; i++){
 
             try {
-                cli = (ClienteInterface) Naming.lookup(
-                        "rmi://" + System.getProperty("cliente_rmi_ip") + "/cliente"
+                smi = (SearchModuleInterface) Naming.lookup(
+                        "rmi://" + System.getProperty("cliente_rmi_ip") + "/search_mod"
                 );
                 break;
             } catch (MalformedURLException | RemoteException | NotBoundException e) {
@@ -53,8 +52,13 @@ public class HomeController {
                 break;
             }
         }
-		cliente = cli;
-        return cli;
+		search_mod = smi;
+        return smi;
+    }
+
+	@GetMapping("/")
+    public String bar(Model model) {
+        return "navbar";
     }
 
 
@@ -71,10 +75,10 @@ public class HomeController {
 
     @PostMapping("/add-url")
     public String processURL(@RequestParam("url") String url, Model model) {
-		ClienteInterface cli = get_server_connection();
-		
+		SearchModuleInterface smi = get_server_connection();
+		if (smi == null)System.out.println("merda");
 		try {
-			if (cli != null &&  cli.handle_add(url)){
+			if (smi != null &&  smi.querie_url(url)){
 				model.addAttribute("successMessage", "URL processed successfully");
 			}else{
 				model.addAttribute("successMessage", "Failed to process URL");
@@ -99,7 +103,7 @@ public class HomeController {
 
 	@GetMapping("/results")
 	public String showSearchResults(@RequestParam("q") String query, @RequestParam("source") Integer source, Model model) {
-		ClienteInterface cli = get_server_connection();
+		SearchModuleInterface smi = get_server_connection();
 
 		model.addAttribute("self_query", query);
 
@@ -113,8 +117,8 @@ public class HomeController {
 			model.addAttribute("source_val", 1);
 
 			try {
-				if (cli == null) return "redirect:/search";
-				results = cli.handle_search(terms);
+				if (smi == null) return "redirect:/search";
+				results = smi.search_results(Arrays.asList(terms));
 			} catch (RemoteException e) {
 				// e.printStackTrace();
 			}
@@ -124,7 +128,7 @@ public class HomeController {
 			model.addAttribute("source_val", 0);
 			System.out.println(query);
 			// results = HackerNewsSearch.searchHackerNews(query);
-			results = HackerNewsSearch.searchHackerTopNews(query, cli);
+			results = HackerNewsSearch.searchHackerTopNews(query, smi);
 			// searchHackerNews(query);
 		}
 
@@ -146,15 +150,15 @@ public class HomeController {
 
 	@GetMapping("/probe")
 	public String showProbeResults(@RequestParam("q") String query, Model model) {
-		ClienteInterface cli = get_server_connection();
+		SearchModuleInterface smi = get_server_connection();
 
-		if (cli == null){
+		if (smi == null){
 			return "redirect:/sorry";
 		}
 		
 		List<String> results = null;
 		try {
-			results = cli.sudo_handle_probe(query);
+			results = smi.probe_url(query);
 		} catch (RemoteException e) {
 			// e.printStackTrace();
 		}
@@ -174,9 +178,9 @@ public class HomeController {
 
 	@PostMapping("/user")
     public String user_post(@RequestParam("terms") String user, Model model) {
-		ClienteInterface cli = get_server_connection();
+		SearchModuleInterface smi = get_server_connection();
 
-		if (HackerNewsSearch.index_user_stories(user, cli)){
+		if (HackerNewsSearch.index_user_stories(user, smi)){
 			model.addAttribute("successMessage", "User stories sent to index");
 		}else {
 			model.addAttribute("successMessage", "Failed to send to index user stories");
