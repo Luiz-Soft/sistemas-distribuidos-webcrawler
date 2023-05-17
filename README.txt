@@ -3,6 +3,10 @@
 `mvn --version` ==> `Apache Maven 3.9.2`
 
 ---
+## Obter projeto
+`git clone https://github.com/Luiz-Soft/sistemas-distribuidos-webcrawler.git`
+
+___
 ## Compile
 Comece no diratorio da raiz do projeto
 
