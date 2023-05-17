@@ -74,7 +74,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>search_module.SearchModule</mainClass> <!-- Replace with your main class -->
+							<mainClass>website.Application</mainClass> <!-- Replace with your main class -->
 						</manifest>
 					</archive>
 				</configuration>
