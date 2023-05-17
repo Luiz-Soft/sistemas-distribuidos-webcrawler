@@ -1,8 +1,4 @@
 {
-	"java.project.referencedLibraries": [
-		"lib/**/*.jar",
-		"jsoup-1.15.4.jar",
-		"googol/webcrawler/jsoup-1.15.4.jar",
-		"googol/downloader/jsoup-1.15.4.jar"
-	]
+	"java.configuration.updateBuildConfiguration": "automatic",
+	"java.compile.nullAnalysis.mode": "automatic"
 }

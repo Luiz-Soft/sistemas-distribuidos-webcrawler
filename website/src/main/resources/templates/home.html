@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<title>Spring Boot Thymeleaf Demo</title>
+	</head>
+	<body>
+		<h1 th:text="${message}"></h1>
+		<form th:action="@{/submit}" method="post">
+			<label for="myInput">Enter some text:</label><br />
+			<input
+				type="text"
+				id="myInput"
+				name="myInput"
+				th:value="${inputValue}"
+			/><br />
+			<input type="submit" value="Submit" />
+		</form>
+	</body>
+</html>

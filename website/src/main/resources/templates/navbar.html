@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Navigation Bar</title>
+</head>
+<body>
+    <nav>
+        <a th:href="@{/add-url}">
+            <button type="button">Add URL</button>
+        </a>
+        <a th:href="@{/search}">
+            <button type="button">Search</button>
+        </a>
+		<a th:href="@{/user}">
+            <button type="button">Index User</button>
+        </a>
+		
+    </nav>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>URL Processing</title>
+</head>
+<body>
+	<header th:insert="~{navbar}"></header>
+
+
+	<h1>URL Processing Form</h1>
+    <form action="#" th:action="@{/add-url}" method="post">
+        <p>
+            <label for="url">Enter a URL:</label>
+            <input type="text" id="url" name="url" />
+        </p>
+        <p>
+            <button type="submit">Process</button>
+        </p>
+    </form>
+    
+    <div th:if="${successMessage}">
+        <p th:text="${successMessage}"></p>
+    </div>
+</body>
+</html>

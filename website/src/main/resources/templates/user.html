@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User Index</title>
+</head>
+<body>
+	<header th:insert="~{navbar}"></header>
+
+
+	<h1>User Index</h1>
+    <form action="#" th:action="@{/user}" method="post">
+        <p>
+            <label for="terms">Enter user to index:</label>
+            <input type="text" id="terms" name="terms" />
+        </p>
+        <p>
+            <button type="submit">Submit</button>
+        </p>
+    </form>
+    
+    <div th:if="${successMessage}">
+        <p th:text="${successMessage}"></p>
+    </div>
+</body>
+</html>
