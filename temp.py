@@ -28,28 +28,25 @@
 import requests
 from tqdm import tqdm
 
-# Step 1: Get the top story IDs
-response = requests.get('https://hacker-news.firebaseio.com/v0/topstories.json')
-top_story_ids = response.json()
+username = "nnurmanov"
 
+# Step 1: Get the top story IDs
+response = requests.get(f'https://hacker-news.firebaseio.com/v0/user/{username}.json')
+top_story_ids = response.json()
+print(top_story_ids)
 # Step 2: Iterate through the story IDs and retrieve story details
-desired_terms = ['term1', 'term2']  # Replace with your desired terms
 desired_stories = []
 c = 0
 
-for story_id in tqdm(top_story_ids):
+for story_id in tqdm(top_story_ids["submitted"]):
 	story_response = requests.get(f'https://hacker-news.firebaseio.com/v0/item/{story_id}.json')
 	story = story_response.json()
 	
-	if story is None:
+	if story is None or story["type"] != "story":
 		c += 1
 		continue
 
-	desired_stories.append((story_id, story['title']))
-	# Step 3: Check if the story's text contains desired terms
-	# story_text = story.get('text', '')
-	# if any(term in story_text for term in desired_terms):
-	# 	desired_stories.append(story)
+	desired_stories.append((story_id))
 
 # Step 4: Print the desired stories
 for story in desired_stories:

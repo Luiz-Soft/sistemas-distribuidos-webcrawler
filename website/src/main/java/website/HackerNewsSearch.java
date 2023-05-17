@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import cliente.ClienteInterface;
@@ -24,7 +25,7 @@ import utils.SearchResult;
 public class HackerNewsSearch {
 	private static HashMap<String, HashSet<Integer>> index = new HashMap<>();
 
-	private static String get_json(String url) throws IOException, InterruptedException{
+	public static String get_json(String url) throws IOException, InterruptedException{
 		HttpClient client = HttpClient.newHttpClient();
 		HttpRequest request = HttpRequest.newBuilder()
 			.uri(java.net.URI.create(url))
@@ -59,7 +60,7 @@ public class HackerNewsSearch {
 					
 					try {
 						JSONObject page = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/item/"+id+".json"));
-						if (page.getString("type") == "story" || !page.isNull("text"))
+						if (page.getString("type").equals("story") || !page.isNull("text"))
 							index_page(id, page.getString("text"));
 					} catch (IOException | InterruptedException | org.json.JSONException e) {
 						continue;
@@ -76,7 +77,6 @@ public class HackerNewsSearch {
         Thread assignDownloadersThread = new Thread(assignDownloadersRunnable);
         assignDownloadersThread.start();
 	}
-
 
 	private static Set<Integer> search(List<String> terms) {
         System.out.println("Searching for " + String.join(", ", terms));
@@ -104,6 +104,7 @@ public class HackerNewsSearch {
 
 
 	public static void main(String[] args) {
+		// nnurmanov
         String query = "python data science";
         searchHackerNews(query);
     }
@@ -208,5 +209,40 @@ public class HackerNewsSearch {
 
         return storyText;
     }
+
+
+	public static boolean index_user_stories(String username, ClienteInterface cli) {
+		JSONObject data;
+		try {
+			data = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/user/"+username+".json"));
+		} catch (JSONException | IOException | InterruptedException e) {
+			return false;
+		}
+
+		Runnable assignDownloadersRunnable = () -> {
+			JSONArray subm = data.getJSONArray("submitted");
+			// System.out.println("https://hacker-news.firebaseio.com/v0/user/"+username+".json");
+			if (subm == null) return;
+
+			for (int i = 0; i < subm.length(); i++) {
+				int id = subm.getInt(i);
+				
+				try {
+					JSONObject page = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/item/"+id+".json"));
+					// System.out.println(page.getString("type"));
+					if (page.getString("type").equals("story")){
+						cli.handle_add("https://news.ycombinator.com/item?id="+id);
+					}
+				
+				} catch (IOException | InterruptedException | org.json.JSONException e) {
+					continue;
+				}
+			}
+        };
+
+        Thread assignDownloadersThread = new Thread(assignDownloadersRunnable);
+        assignDownloadersThread.start();
+		return true;
+	}
 
 }

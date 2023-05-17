@@ -1,5 +1,7 @@
 package website;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -164,4 +166,23 @@ public class HomeController {
 		return "probeUrl";
 	}
 
+
+	@GetMapping("/user")
+	public String user(Model model) {
+		return "user";
+	}
+
+	@PostMapping("/user")
+    public String user_post(@RequestParam("terms") String user, Model model) {
+		ClienteInterface cli = get_server_connection();
+
+		if (HackerNewsSearch.index_user_stories(user, cli)){
+			model.addAttribute("successMessage", "User stories sent to index");
+		}else {
+			model.addAttribute("successMessage", "Failed to send to index user stories");
+		}
+
+		return "/user";
+
+	}
 }
