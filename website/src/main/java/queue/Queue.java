@@ -133,11 +133,10 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 
     @Override
     public void append_url(String url) throws RemoteException {
-        if (my_queue.size() > 500) return;
         if (already_seen.containsKey(url)) return;
 
         already_seen.put(url, true);
-        System.out.println(url + " recived");
+        System.out.println(url + " recieved");
         my_queue.add(url);
     }
 
