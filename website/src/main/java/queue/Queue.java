@@ -142,7 +142,6 @@ class Queue extends UnicastRemoteObject implements QueueInterface{
 
     @Override
     public void extend_urls(List<String> urls) throws RemoteException {
-        if (my_queue.size() > 500) return;
 
         for (String url : urls) {
             if (already_seen.containsKey(url)) continue;
