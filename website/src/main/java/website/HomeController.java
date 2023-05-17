@@ -99,10 +99,6 @@ public class HomeController {
 	public String showSearchResults(@RequestParam("q") String query, @RequestParam("source") Integer source, Model model) {
 		ClienteInterface cli = get_server_connection();
 
-		if (cli == null){
-			return "redirect:/search";
-		}
-
 		model.addAttribute("self_query", query);
 
 		// Process the search query
@@ -115,6 +111,7 @@ public class HomeController {
 			model.addAttribute("source_val", 1);
 
 			try {
+				if (cli == null) return "redirect:/search";
 				results = cli.handle_search(terms);
 			} catch (RemoteException e) {
 				// e.printStackTrace();
@@ -124,7 +121,8 @@ public class HomeController {
 			model.addAttribute("toggle_text", "Toggle Googol");
 			model.addAttribute("source_val", 0);
 			System.out.println(query);
-			results = HackerNewsSearch.searchHackerNews(query);
+			// results = HackerNewsSearch.searchHackerNews(query);
+			results = HackerNewsSearch.searchHackerTopNews(query, cli);
 			// searchHackerNews(query);
 		}
 

@@ -15,6 +15,8 @@ public class Application {
 
 		// System.setProperty("cliente_rmi_ip", args[0]);
 		System.setProperty("cliente_rmi_ip", "localhost:1097");
+		HackerNewsSearch.scrape_top_stories();
+
 
 		SpringApplication.run(Application.class, args);
 	}

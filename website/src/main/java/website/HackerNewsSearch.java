@@ -7,16 +7,103 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import cliente.ClienteInterface;
 import utils.SearchResult;
 
 public class HackerNewsSearch {
-    public static void main(String[] args) {
+	private static HashMap<String, HashSet<Integer>> index = new HashMap<>();
+
+	private static String get_json(String url) throws IOException, InterruptedException{
+		HttpClient client = HttpClient.newHttpClient();
+		HttpRequest request = HttpRequest.newBuilder()
+			.uri(java.net.URI.create(url))
+			.build();
+		
+		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+		String responseBody = response.body();
+
+		return responseBody;
+	}
+
+	private static void index_page(int id, String string) {
+		for (String word : string.split("\\s")) {
+			HashSet<Integer> temp = index.get(word);
+
+			if(temp == null){
+				temp = new HashSet<>();
+				index.put(word, temp);
+			};
+			temp.add(id);
+		}
+		System.out.println("Scraped "+id);
+	}
+
+    public static void scrape_top_stories() {
+		Runnable assignDownloadersRunnable = () -> {
+			try {
+				JSONArray data = new JSONArray(get_json("https://hacker-news.firebaseio.com/v0/topstories.json"));
+
+				for (int i = 0; i < data.length(); i++) {
+					int id = data.getInt(i);
+					
+					try {
+						JSONObject page = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/item/"+id+".json"));
+						if (page.getString("type") == "story" || !page.isNull("text"))
+							index_page(id, page.getString("text"));
+					} catch (IOException | InterruptedException | org.json.JSONException e) {
+						continue;
+					}
+					
+				}
+
+			} catch (IOException | InterruptedException e) {
+				// pass
+			}
+			System.out.println("FINISHED");
+        };
+
+        Thread assignDownloadersThread = new Thread(assignDownloadersRunnable);
+        assignDownloadersThread.start();
+	}
+
+
+	private static Set<Integer> search(List<String> terms) {
+        System.out.println("Searching for " + String.join(", ", terms));
+
+        Set<Integer> commonUrls = new HashSet<>();
+
+        boolean firstTerm = true;
+        for (String term : terms) {
+            HashSet<Integer> urls = index.get(term);
+
+            if (urls == null) {
+                return commonUrls; // If any term is not found, return an empty list
+            }
+
+            if (firstTerm) {
+                commonUrls.addAll(urls);
+                firstTerm = false;
+            } else {
+                commonUrls.retainAll(urls);
+            }
+        }
+
+		return commonUrls;
+	}
+
+
+	public static void main(String[] args) {
         String query = "python data science";
         searchHackerNews(query);
     }
@@ -73,6 +160,40 @@ public class HackerNewsSearch {
 		return null;
     }
 
+	public static List<SearchResult> searchHackerTopNews(String query, ClienteInterface cli) {
+		Set<Integer> data = search(Arrays.asList(query.split("\\s")));
+		
+		List<SearchResult> resp = new ArrayList<>();
+		
+		for (Integer id : data) {
+			try {
+				JSONObject page = new JSONObject(get_json("https://hacker-news.firebaseio.com/v0/item/"+id+".json"));
+
+				try {
+					cli.handle_add("https://news.ycombinator.com/item?id="+id);
+				} catch (RemoteException e) {
+					System.out.println("Error remote");
+				}
+
+				String title = page.isNull("title") ? null : page.getString("title");
+                String url = page.isNull("url") ? null : page.getString("url");
+                String storyText = page.isNull("text")? null : page.getString("text");
+
+				if (url == null || url.equals("null")) {
+                    url = "https://news.ycombinator.com/item?id=" + id;
+                }
+
+				String firstParagraph = extractFirstParagraph(storyText);
+
+				resp.add(new SearchResult(title, url, firstParagraph));
+
+			} catch (IOException | InterruptedException e) {
+				continue;
+			}
+		}
+
+		return resp;
+	}
 
 	public static String extractFirstParagraph(String storyText) {
         // Find the start and end index of the first <p> tag
@@ -87,4 +208,5 @@ public class HackerNewsSearch {
 
         return storyText;
     }
+
 }
