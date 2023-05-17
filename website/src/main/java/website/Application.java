@@ -9,7 +9,7 @@ public class Application {
 	public static void main(String[] args) {
 
 		if (args.length == 0){
-			System.out.println("Correct usage\n\t cliente.jar <\"ip:port\"_of_smi>");
+			System.out.println("Correct usage\n\t website.jar <\"ip:port\"_of_smi>");
 			return;
 		}
 
