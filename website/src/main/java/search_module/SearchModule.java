@@ -244,7 +244,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
         // first try
         try {
             queue.append_url(url);
-            System.out.println(url + " recived");
+            System.out.println(url + " recieved");
             return true;
 
         } catch (RemoteException | NullPointerException e) {
@@ -261,7 +261,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
             e.printStackTrace();
         }
 
-        System.out.println(url + " recived");
+        System.out.println(url + " recieved");
 
         return true;
     }
