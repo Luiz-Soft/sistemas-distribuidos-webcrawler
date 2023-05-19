@@ -3,6 +3,7 @@ package search_module;
 import cliente.ClienteInterface;
 import indexstoragebarrels.IndexStorageBarrelInterface;
 import utils.SearchResult;
+import website.HomeControllerInterface;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -21,5 +22,6 @@ public interface SearchModuleInterface extends Remote {
     void print_status() throws RemoteException;
     void register_cliente_obj(ClienteInterface cli) throws RemoteException;
     void register_ibs_obj(IndexStorageBarrelInterface ibs) throws RemoteException;
+    void register_web_obj(HomeControllerInterface ws) throws RemoteException;
     void ping() throws RemoteException;
 }

@@ -1,5 +1,6 @@
 package website;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,19 +11,30 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import search_module.SearchModuleInterface;
+import utils.ProxyStatus;
 import utils.SearchResult;
 
 @Controller
-public class HomeController {
-    private static final int num_of_tries = 5;
-	private SearchModuleInterface search_mod = null;
+public class HomeController extends UnicastRemoteObject implements HomeControllerInterface {
+    
+	protected HomeController() throws RemoteException {
+		super();
+	}
 
-    private SearchModuleInterface get_server_connection() {
+	private static final int num_of_tries = 5;
+	private SearchModuleInterface search_mod = null;
+	
+	@Autowired
+    private WSService service;
+
+    
+    public SearchModuleInterface get_server_connection() {
 		if (search_mod != null){
 			try {
 				search_mod.ping();
@@ -52,15 +64,45 @@ public class HomeController {
                 break;
             }
         }
+		
+		if (smi == null) return null;
+
+		try {
+			smi.register_web_obj(this);
+		} catch (RemoteException e) {
+			// pass
+		}
+
+		// search_mod.re
 		search_mod = smi;
         return smi;
     }
+
+	@Override
+	public void sendMessage(List<String> top10, List<List<ProxyStatus>> info) {
+		String resp = "<h2>Top 10 words</h2><ul>";
+		for (String word : top10) {
+			resp += "<li>"+word+"</li>";
+		}
+		
+		resp += "</ul><h2>Downloaders</h2><ul>";
+		for (ProxyStatus down : info.get(0)) {
+			resp += "<li>"+down.toString()+"</li>";
+		}
+
+		resp += "</ul><h2>Barrels</h2><ul>";
+		for (ProxyStatus barrel : info.get(1)) {
+			resp += "<li>"+barrel.toString()+"</li>";
+		}
+
+		resp += "</ul>";
+		service.notifyFrontend(resp);
+	}
 
 	@GetMapping("/")
     public String bar(Model model) {
         return "navbar";
     }
-
 
 	@GetMapping("/sorry")
     public String sorry(Model model) {
@@ -188,5 +230,13 @@ public class HomeController {
 
 		return "/user";
 
+	}
+
+
+	@GetMapping("/status")
+	public String status(Model model) {
+		get_server_connection();
+
+		return "status";
 	}
 }

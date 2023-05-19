@@ -5,6 +5,7 @@ import indexstoragebarrels.IndexStorageBarrelInterface;
 import queue.QueueInterface;
 import utils.ProxyStatus;
 import utils.SearchResult;
+import website.HomeControllerInterface;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -29,6 +30,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
     private ConcurrentHashMap<String, String> users;
     private ConcurrentLinkedDeque<ClienteInterface> clientes;
     private ConcurrentLinkedDeque<IndexStorageBarrelInterface> ibss;
+    private ConcurrentLinkedDeque<HomeControllerInterface> webs;
     private ConcurrentHashMap<String, Integer> pesquisas;
 
     private String queue_ip_adress;
@@ -42,6 +44,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
         queue = get_queue_conection();
         clientes = new ConcurrentLinkedDeque<>();
         ibss = new ConcurrentLinkedDeque<>();
+		webs = new ConcurrentLinkedDeque<>();
     }
 
 
@@ -110,6 +113,7 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
 
             clientes.clear();
             ibss.clear();
+			webs.clear();
             queue = null;
 
             out.writeObject(this);
@@ -331,11 +335,18 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
         print_status();
     }
 
+	@Override
+	public void register_web_obj(HomeControllerInterface ws) throws RemoteException {
+		System.out.println("New web");
+		webs.add(ws);
+	}
+
     @Override
     public void print_status() throws RemoteException {
         System.out.println("Printing status");
 
         ConcurrentLinkedDeque<ClienteInterface> active_clients = new ConcurrentLinkedDeque<>();
+        ConcurrentLinkedDeque<HomeControllerInterface> active_webs = new ConcurrentLinkedDeque<>();
         List<List<ProxyStatus>> resp = new ArrayList<>();
 
         List<ProxyStatus> downloaders = get_queue_status();
@@ -353,7 +364,17 @@ public class SearchModule extends UnicastRemoteObject implements SearchModuleInt
             }
         }
 
+		for (HomeControllerInterface web: webs) {
+			try {
+				web.sendMessage(top10, resp);
+				active_webs.add(web);
+			} catch (RemoteException e){
+				// pass
+			}
+		}
+
         clientes = active_clients;
+		webs = active_webs;
     }
 
     @Override
