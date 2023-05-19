@@ -274,7 +274,7 @@ public class Cliente extends UnicastRemoteObject implements ClienteInterface{
 
 			my_client.run();
 			
-			// System.exit(0);
+			System.exit(0);
 
         } catch (RemoteException e) {
             e.printStackTrace();
