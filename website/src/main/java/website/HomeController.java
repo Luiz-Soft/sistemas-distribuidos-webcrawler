@@ -235,7 +235,11 @@ public class HomeController extends UnicastRemoteObject implements HomeControlle
 
 	@GetMapping("/status")
 	public String status(Model model) {
-		get_server_connection();
+		SearchModuleInterface smi = get_server_connection();
+
+		if (smi == null){
+			return "sorry";
+		}
 
 		return "status";
 	}
